@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
 	Activity,
 	AlertTriangle,
@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import Sidebar from "../components/Sidebar";
 import Topbar from "../components/Topbar";
+import AnalyzeCall from "./AnalyzeCall";
 
 const analytics = {
 	totalCalls: 128,
@@ -173,6 +174,7 @@ const Dashboard = ({ user, onLogout }) => {
 	const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 	const [mobileOpen, setMobileOpen] = useState(false);
 	const navigate = useNavigate();
+	const location = useLocation();
 	const sentimentData = [
 		{ name: "Positive", value: analytics.positiveCalls, color: "#00D4AA" },
 		{ name: "Negative", value: analytics.negativeCalls, color: "#FF6B6B" },
@@ -206,6 +208,7 @@ const Dashboard = ({ user, onLogout }) => {
 	};
 
 	const mainOffsetClass = sidebarCollapsed ? "md:ml-[68px]" : "md:ml-[240px]";
+	const isAnalyzeRoute = location.pathname === "/app/analyze";
 
 	return (
 		<div
@@ -234,6 +237,10 @@ const Dashboard = ({ user, onLogout }) => {
 
 			<div className={`relative z-10 pt-16 transition-[margin] duration-300 ${mainOffsetClass}`}>
 				<div className="mx-auto max-w-7xl px-6 py-10 lg:px-12">
+				{isAnalyzeRoute ? (
+					<AnalyzeCall />
+				) : (
+					<>
 				<div className="mb-8 flex flex-wrap items-start justify-between gap-4">
 					<div>
 						<h1 className="text-3xl font-extrabold tracking-tight text-white md:text-4xl">
@@ -464,6 +471,8 @@ const Dashboard = ({ user, onLogout }) => {
 						</div>
 					</div>
 				</section>
+				</>
+				)}
 				</div>
 			</div>
 		</div>
