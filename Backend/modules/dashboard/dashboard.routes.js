@@ -1,4 +1,5 @@
 import express from "express";
+import { authMiddleware } from "../../middlewares/auth.middleware.js";
 import {
   getCalls,
   getCallDetailsHandler,
@@ -13,25 +14,25 @@ import {
 const router = express.Router();
 
 // GET - Retrieve all analyzed calls with summary
-router.get("/calls", getCalls);
+router.get("/calls", authMiddleware, getCalls);
 
 // GET - Retrieve full details of a specific call
-router.get("/call/:callId", getCallDetailsHandler);
+router.get("/call/:callId", authMiddleware, getCallDetailsHandler);
 
 // PUT - Update extracted metadata before final save/report
-router.put("/call/:callId/metadata", updateCallMetadataHandler);
+router.put("/call/:callId/metadata", authMiddleware, updateCallMetadataHandler);
 
 // GET - Get dashboard analytics and statistics
-router.get("/analytics", getAnalyticsHandler);
+router.get("/analytics", authMiddleware, getAnalyticsHandler);
 
 // GET - Filter calls by product_name and/or sentiment and/or call_type
-router.get("/filter", filterCallsHandler);
+router.get("/filter", authMiddleware, filterCallsHandler);
 
 // GET - Get analysis for a specific product
-router.get("/product", getProductAnalysis);
+router.get("/product", authMiddleware, getProductAnalysis);
 
 // GET - Get competitor intelligence
-router.get("/competitors", getCompetitorInsights);
+router.get("/competitors", authMiddleware, getCompetitorInsights);
 
 // GET - Download a full analysis report as HTML
 router.get("/report/:callId", downloadCallReportHandler);

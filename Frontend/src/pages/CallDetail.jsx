@@ -1,4 +1,4 @@
-import { createElement, useMemo, useState } from 'react';
+import { createElement, useMemo, useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import {
   Activity,
@@ -30,212 +30,10 @@ import {
   Users,
   Zap,
 } from 'lucide-react';
+import { dashboardApi } from '../api/api';
 
 const cardClassName = 'rounded-2xl border border-white/10 bg-[#121527]/90 p-5 shadow-[0_16px_50px_rgba(0,0,0,0.25)] backdrop-blur-md';
 const inputClassName = 'w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none transition placeholder:text-slate-500 focus:border-indigo-400/50 focus:bg-white/8';
-
-const baseCalls = {
-  'call-101': {
-    callId: 'call-101',
-    call_title: 'Enterprise Suite Procurement Review',
-    call_type: 'sales',
-    product_name: 'Enterprise Suite',
-    customer_name: 'Aarav Mehta',
-    customer_email: 'aarav.mehta@northstarprocure.com',
-    customer_phone: '+91 98765 43210',
-    fileName: 'enterprise-suite-review.mp3',
-    createdAt: '2026-03-12T09:30:00.000Z',
-    transcript: 'Sales Rep: Thanks for making time today.\nCustomer: We like the reporting depth, but onboarding speed is still a concern.\nSales Rep: We can support phased onboarding in under three weeks.\nCustomer: That would help. We also need clearer pricing for procurement approval.\nSales Rep: I will send a structured pricing breakdown and rollout plan after this call.',
-    aiInsights: {
-      summary: 'The buyer responded positively to reporting capabilities and team visibility, but raised clear concerns around onboarding speed and pricing clarity. The rep handled the discussion calmly, positioned phased rollout well, and secured a next step centered on a pricing breakdown. Deal momentum is healthy, though procurement scrutiny remains a material risk.',
-      objections: ['Onboarding may take too long for the team timeline.', 'Pricing needs to be clearer for procurement approval.'],
-      buyingSignals: ['Customer asked implementation timeline questions.', 'Prospect requested a structured pricing follow-up.', 'Reporting depth was received positively.'],
-      positivePoints: ['Reporting depth', 'Team visibility', 'Phased rollout option'],
-      competitors: ['Clariq', 'RevPilot'],
-      competitorAdvantages: ['Lower implementation cost', 'Simpler initial setup'],
-      improvementsNeeded: ['Faster onboarding narrative', 'More transparent pricing packaging'],
-      productName: 'Enterprise Suite',
-      callTitle: 'Enterprise Suite Procurement Review',
-      callType: 'sales',
-      sentiment: 'positive',
-      dealProbability: 82,
-      followUpRecommendation: 'Send a procurement-ready pricing breakdown, include phased onboarding milestones, and propose a technical walkthrough with implementation stakeholders within 48 hours.',
-      customer: {
-        name: 'Aarav Mehta',
-        email: 'aarav.mehta@northstarprocure.com',
-        phone: '+91 98765 43210',
-      },
-      emailDraft: {
-        subject: 'Next steps and pricing breakdown for Enterprise Suite',
-        body: 'Hi Aarav,\n\nThanks again for the conversation today. As discussed, I am sharing a clearer pricing breakdown along with a phased onboarding outline that keeps rollout within your team timeline.\n\nI would also be happy to set up a technical walkthrough with your implementation stakeholders this week.\n\nBest,\nDreamBuilders Sales Team',
-        tone: 'professional',
-        cta: 'Schedule technical walkthrough',
-      },
-      salespersonTone: {
-        overall: 'professional',
-        emotionalIntelligence: 8,
-        breakdown: ['Calm under procurement pressure', 'Clear and structured answers', 'Confident without sounding aggressive'],
-        toneShifts: ['Became more consultative during onboarding discussion'],
-        examples: ['We can support phased onboarding in under three weeks.', 'I will send a structured pricing breakdown after this call.'],
-      },
-      salespersonPerformance: {
-        rating: 8,
-        verdict: 'The rep maintained control of the conversation, addressed key concerns directly, and created a practical next step. The remaining gap is sharper handling of cost-value framing.',
-        skills: {
-          discovery: 8,
-          objectionHandling: 7,
-          productKnowledge: 9,
-          confidence: 8,
-          empathy: 7,
-          closing: 7,
-        },
-        strengths: ['Strong product positioning', 'Good implementation framing', 'Clear next-step ownership'],
-        weaknesses: ['Could quantify ROI more explicitly', 'Could isolate procurement concerns earlier'],
-        tips: ['Lead with timeline proof points.', 'Use pricing anchors before detailed breakdowns.'],
-        missedOpportunities: ['Did not probe procurement approval stages in detail.'],
-        callPhases: {
-          opening: 8,
-          discovery: 7,
-          objectionHandling: 7,
-          valuePitch: 8,
-          close: 7,
-        },
-      },
-      conversationAnalysis: {
-        talkRatioSalesperson: 56,
-        talkRatioCustomer: 44,
-        questionsAskedBySalesperson: 9,
-        questionsAskedByCustomer: 6,
-        urgencyLevel: 'medium',
-        customerEngagementScore: 8,
-        keyTopics: ['Reporting', 'Onboarding', 'Pricing', 'Procurement'],
-        painPoints: ['Slow implementation risk', 'Approval complexity'],
-        pricingDiscussed: true,
-        pricingDetails: 'Customer needs clearer package structure and rollout-linked commercial terms before moving the deal forward.',
-        decisionMakers: ['Procurement lead', 'Operations manager'],
-        actionItems: ['Rep to send pricing sheet', 'Rep to propose technical walkthrough'],
-        nextSteps: ['Review commercial package', 'Schedule implementation review'],
-        objectionResponses: [
-          {
-            objection: 'Onboarding will take too long.',
-            response: 'Rep positioned a phased rollout with a three-week implementation target.',
-            effectiveness: 'strong',
-          },
-          {
-            objection: 'Pricing needs more clarity.',
-            response: 'Rep promised a detailed pricing breakdown after the call.',
-            effectiveness: 'average',
-          },
-        ],
-      },
-      keyMoments: [
-        {
-          moment: 'Buyer responded well to phased onboarding',
-          description: 'Timeline concern softened once the rep described a staged rollout.',
-          impact: 'positive',
-        },
-        {
-          moment: 'Pricing concern remained open',
-          description: 'Procurement clarity is still needed before advancing.',
-          impact: 'neutral',
-        },
-      ],
-    },
-  },
-  'call-102': {
-    callId: 'call-102',
-    call_title: 'Growth Plan Pilot Discussion',
-    call_type: 'sales',
-    product_name: 'Growth Plan',
-    customer_name: 'Riya Shah',
-    customer_email: 'riya.shah@peakworks.io',
-    customer_phone: '+91 99887 77665',
-    fileName: 'growth-plan-pilot.m4a',
-    createdAt: '2026-03-11T14:15:00.000Z',
-    transcript: 'Customer asked for a smaller pilot before a full rollout. Finance needs a lower-risk entry point and wants success metrics defined before committing budget.',
-    aiInsights: {
-      summary: 'The buyer sees value in the Growth Plan, but finance is not ready for a broad commitment. The rep kept the discussion constructive, though the conversation needs stronger pilot framing and quantified outcomes.',
-      objections: ['Finance wants a smaller pilot first.'],
-      buyingSignals: ['Champion still sees value.', 'Pilot path is being considered instead of a full rejection.'],
-      positivePoints: ['Interest in measured rollout', 'Openness to pilot metrics'],
-      competitors: ['SalesForge'],
-      competitorAdvantages: ['Lower upfront commitment'],
-      improvementsNeeded: ['Stronger pilot success framework'],
-      productName: 'Growth Plan',
-      callTitle: 'Growth Plan Pilot Discussion',
-      callType: 'sales',
-      sentiment: 'neutral',
-      dealProbability: 58,
-      followUpRecommendation: 'Package a narrow pilot proposal with explicit success criteria and a lower-risk commercial model.',
-      customer: {
-        name: 'Riya Shah',
-        email: 'riya.shah@peakworks.io',
-        phone: '+91 99887 77665',
-      },
-      emailDraft: {
-        subject: 'Pilot proposal for Growth Plan',
-        body: 'Hi Riya,\n\nFollowing up with a draft pilot structure that keeps scope controlled while giving your finance team measurable outcomes to review.\n\nRegards,\nDreamBuilders Sales Team',
-        tone: 'professional',
-        cta: 'Review pilot structure',
-      },
-      salespersonTone: {
-        overall: 'friendly',
-        emotionalIntelligence: 7,
-        breakdown: ['Supportive tone', 'Non-pushy approach'],
-        toneShifts: ['Moved from broad pitch to more collaborative planning'],
-        examples: ['We can start with a smaller pilot and build confidence from there.'],
-      },
-      salespersonPerformance: {
-        rating: 7,
-        verdict: 'Solid relationship management, but the rep needs sharper pilot framing to convert interest into commitment.',
-        skills: {
-          discovery: 7,
-          objectionHandling: 6,
-          productKnowledge: 8,
-          confidence: 7,
-          empathy: 8,
-          closing: 6,
-        },
-        strengths: ['Good empathy', 'Constructive tone'],
-        weaknesses: ['Pilot economics not fully defined'],
-        tips: ['Propose success metrics in the call, not after it.'],
-        missedOpportunities: ['Could have asked who signs off on pilot budget.'],
-        callPhases: {
-          opening: 7,
-          discovery: 7,
-          objectionHandling: 6,
-          valuePitch: 7,
-          close: 6,
-        },
-      },
-      conversationAnalysis: {
-        talkRatioSalesperson: 51,
-        talkRatioCustomer: 49,
-        questionsAskedBySalesperson: 7,
-        questionsAskedByCustomer: 5,
-        urgencyLevel: 'medium',
-        customerEngagementScore: 7,
-        keyTopics: ['Pilot', 'Finance approval', 'Metrics'],
-        painPoints: ['Budget caution', 'Need for low-risk rollout'],
-        pricingDiscussed: true,
-        pricingDetails: 'Customer wants a smaller initial commercial commitment with clear review gates.',
-        decisionMakers: ['Finance lead', 'Revenue operations manager'],
-        actionItems: ['Send pilot proposal'],
-        nextSteps: ['Book finance review'],
-        objectionResponses: [],
-      },
-      keyMoments: [
-        {
-          moment: 'Pilot interest surfaced',
-          description: 'Buyer suggested a smaller starting scope instead of blocking the opportunity.',
-          impact: 'positive',
-        },
-      ],
-    },
-  },
-};
-
-const getCallById = (callId) => baseCalls[callId] || baseCalls['call-101'];
 
 const sentimentMap = {
   positive: { label: 'Positive', icon: Smile, className: 'border-emerald-500/20 bg-emerald-500/10 text-emerald-300' },
@@ -347,7 +145,7 @@ function RatingRing({ score }) {
   );
 }
 
-function CallDetail() {
+function CallDetail({ token }) {
   const location = useLocation();
   const [feedback, setFeedback] = useState(null);
   const [copied, setCopied] = useState(false);
@@ -356,6 +154,8 @@ function CallDetail() {
   const [savingMeta, setSavingMeta] = useState(false);
   const [editMode, setEditMode] = useState(false);
   const [callMetaOverrides, setCallMetaOverrides] = useState({});
+  const [call, setCall] = useState(null);
+  const [loading, setLoading] = useState(true);
   const [metaForm, setMetaForm] = useState({
     callTitle: '',
     callType: 'other',
@@ -370,14 +170,49 @@ function CallDetail() {
     return parts[parts.length - 1] || 'call-101';
   }, [location.pathname]);
 
-  const call = useMemo(() => {
-    const base = getCallById(callId);
-    const overrides = callMetaOverrides[callId];
-    return overrides ? { ...base, ...overrides } : base;
-  }, [callId, callMetaOverrides]);
+  // Fetch call details from backend
+  useEffect(() => {
+    const fetchCallDetails = async () => {
+      setLoading(true);
+      try {
+        const result = await dashboardApi.getCallDetails(callId, token);
+        if (result.call) {
+          setCall(result.call);
+        } else {
+          setFeedback({ type: 'error', message: 'Failed to load call details' });
+        }
+      } catch (error) {
+        setFeedback({ type: 'error', message: 'Error loading call details' });
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchCallDetails();
+  }, [callId, token]);
+
+  if (loading) {
+    return (
+      <div className="flex min-h-[60vh] items-center justify-center py-8 text-slate-200">
+        <div className="flex flex-col items-center gap-3">
+          <div className="h-8 w-8 animate-spin rounded-full border-4 border-white/20 border-t-indigo-400" />
+          <p>Loading call details...</p>
+        </div>
+      </div>
+    );
+  }
 
   if (!call) {
-    return null;
+    return (
+      <div className="flex min-h-[60vh] items-center justify-center py-8 text-slate-200">
+        <div className="flex flex-col items-center gap-4">
+          <p className="text-lg">Call not found</p>
+          <Link to="/dashboard/calls" className="inline-flex items-center gap-2 rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm font-medium text-slate-200 transition hover:bg-white/10">
+            <ArrowLeft size={16} /> Back to Calls
+          </Link>
+        </div>
+      </div>
+    );
   }
 
   const insights = call.aiInsights || {};
@@ -452,7 +287,7 @@ function CallDetail() {
       }));
       setSavingMeta(false);
       setEditMode(false);
-      setFeedback({ type: 'success', message: 'Metadata updated locally for the demo view.' });
+      setFeedback({ type: 'success', message: 'Metadata updated locally.' });
     }, 250);
   };
 

@@ -1,4 +1,5 @@
 import { useCallback, useRef, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
 	CheckCircle,
 	ChevronRight,
@@ -74,8 +75,6 @@ const MAX_FILE_SIZE = 50 * 1024 * 1024;
 const cardClassName = 'rounded-2xl border border-white/10 bg-[#121527]/90 p-5 shadow-[0_16px_50px_rgba(0,0,0,0.25)] backdrop-blur-md';
 const inputClassName = 'w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none transition placeholder:text-slate-500 focus:border-indigo-400/50 focus:bg-white/8';
 const tabBaseClassName = 'inline-flex items-center gap-2 rounded-xl px-5 py-2.5 text-sm font-semibold transition';
-const notConfiguredMessage = 'Analysis API is not configured in this workspace yet. The page UI is ready, but the upload and analysis requests still need to be wired to your backend.';
-
 const formatFileSize = (size) => `${(size / (1024 * 1024)).toFixed(2)} MB`;
 
 const isAcceptedFile = (file) => {
@@ -96,8 +95,7 @@ function AnalyzeCall({ token }) {
 	const [uploadProgress, setUploadProgress] = useState(0);
 	const [isDragActive, setIsDragActive] = useState(false);
 	const [feedback, setFeedback] = useState(null);
-	const [callId, setCallId] = useState(null);
-	const [aiInsights, setAiInsights] = useState(null);
+	const navigate = useNavigate();
 
 	const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api';
 
@@ -127,8 +125,6 @@ function AnalyzeCall({ token }) {
 		setStep(null);
 		setCompletedSteps([]);
 		setUploadProgress(0);
-		setCallId(null);
-		setAiInsights(null);
 	}, []);
 
 	const handleFileInputChange = useCallback((event) => {
@@ -243,7 +239,6 @@ function AnalyzeCall({ token }) {
 			} else {
 				cId = await uploadText();
 			}
-			setCallId(cId);
 			setCompletedSteps(['uploading']);
 
 			// Only transcribe if not text input
@@ -255,13 +250,14 @@ function AnalyzeCall({ token }) {
 
 			// STEP 3: Analyze
 			setStep('analyzing');
-			const insights = await analyzeCall(cId);
-			setAiInsights(insights);
+			await analyzeCall(cId);
 			setCompletedSteps(['uploading', 'transcribing', 'analyzing', 'done']);
 			setStep('done');
 
-			// Show complete view
-			setTimeout(() => setStep('complete'), 1000);
+			// Redirect to full call details page so all generated insights are visible.
+			setTimeout(() => {
+				navigate(`/dashboard/calls/${cId}`);
+			}, 600);
 
 		} catch (error) {
 			resetPipeline();

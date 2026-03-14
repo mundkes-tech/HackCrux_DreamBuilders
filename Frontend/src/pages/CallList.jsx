@@ -52,7 +52,7 @@ const UrgencyBadge = ({ urgency }) => {
   );
 };
 
-const CallList = () => {
+const CallList = ({ token }) => {
   const [calls, setCalls]           = useState([]);
   const [filtered, setFiltered]     = useState([]);
   const [loading, setLoading]       = useState(true);
@@ -63,11 +63,10 @@ const CallList = () => {
   const fetchCalls = async () => {
     setLoading(true);
     try {
-      const res = await dashboardApi.getCalls();
+      const res = await dashboardApi.getCalls(token);
       setCalls(res.calls || []);
       setFiltered(res.calls || []);
     } catch {
-      // Keep UI usable in demo mode even if backend is unavailable.
       setCalls([]);
       setFiltered([]);
     } finally {
@@ -75,7 +74,7 @@ const CallList = () => {
     }
   };
 
-  useEffect(() => { fetchCalls(); }, []);
+  useEffect(() => { fetchCalls(); }, [token]);
 
   // Client-side filter
   useEffect(() => {
