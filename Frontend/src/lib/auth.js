@@ -79,3 +79,27 @@ export const clearStoredAuth = () => {
   window.localStorage.removeItem(AUTH_STORAGE_KEY);
   window.sessionStorage.removeItem(AUTH_STORAGE_KEY);
 };
+
+export const updateUserProfile = async (token, { name, email, company_name, currentPassword, newPassword }) => {
+  const response = await fetch(`${API_BASE_URL}/auth/profile`, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({ name, email, company_name, currentPassword, newPassword }),
+  });
+
+  return parseJson(response);
+};
+
+export const deleteUserAccount = async (token) => {
+  const response = await fetch(`${API_BASE_URL}/auth/account`, {
+    method: "DELETE",
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+  return parseJson(response);
+};

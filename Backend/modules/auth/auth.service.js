@@ -103,14 +103,31 @@ class AuthService {
   }
 
   async updateUserProfile(userId, updateData) {
-    // Don't allow password update through this method
-    delete updateData.password;
+    const finalUpdate = {};
+    if (updateData.name) finalUpdate.name = updateData.name;
+    if (updateData.email) finalUpdate.email = updateData.email.toLowerCase();
+    if (updateData.company_name) finalUpdate.company_name = updateData.company_name;
 
-    await UserModel.updateOne(userId, updateData);
+    if (updateData.newPassword) {
+      // Verify current password first
+      const user = await UserModel.findById(userId);
+      if (!user) throw new Error("User not found");
+      const isValid = await bcryptjs.compare(updateData.currentPassword || "", user.password);
+      if (!isValid) throw new Error("Current password is incorrect");
+      finalUpdate.password = await bcryptjs.hash(updateData.newPassword, 10);
+    }
+
+    await UserModel.updateOne(userId, finalUpdate);
 
     const user = await UserModel.findById(userId);
     const { password, ...userWithoutPassword } = user;
     return userWithoutPassword;
+  }
+
+  async deleteUserAccount(userId) {
+    const { default: CallModel } = await import("../audio/audio.model.js");
+    await CallModel.deleteByUserId(userId);
+    await UserModel.deleteOne(userId);
   }
 
   async verifyToken(token) {

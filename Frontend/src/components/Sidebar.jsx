@@ -9,6 +9,7 @@ import {
 	AlertTriangle,
 	ChevronLeft,
 	ChevronRight,
+	User,
 	Zap,
 	X,
 } from "lucide-react";
@@ -20,6 +21,7 @@ const navItems = [
 	{ icon: BarChart3, label: "Insights", path: "/dashboard/insights" },
 	{ icon: TrendingUp, label: "Top Deals", path: "/dashboard/top-deals" },
 	{ icon: AlertTriangle, label: "High Risk", path: "/dashboard/high-risk" },
+	{ icon: User, label: "Profile", path: "/dashboard/profile" },
 ];
 
 const Sidebar = ({ collapsed, onToggle, mobileOpen, onMobileClose }) => {
@@ -38,7 +40,7 @@ const Sidebar = ({ collapsed, onToggle, mobileOpen, onMobileClose }) => {
 				{!collapsed && (
 					<div className="min-w-0 md:block">
 						<span className="block whitespace-nowrap text-[1.1rem] font-bold text-white">SalesIQ</span>
-						<span className="block whitespace-nowrap text-[0.7rem] text-slate-400">AI Intelligence</span>
+						<span className="block whitespace-nowrap text-[0.7rem] text-slate-400">Revenue Intelligence</span>
 					</div>
 				)}
 
@@ -100,9 +102,9 @@ const Sidebar = ({ collapsed, onToggle, mobileOpen, onMobileClose }) => {
 				<div className="border-t border-white/10 p-4">
 					<div className="flex items-center gap-2 text-[0.8rem] font-semibold text-slate-300">
 						<span className="h-2 w-2 animate-pulse rounded-full bg-emerald-400" />
-						<span>Team DreamBuilders</span>
+						<span>System Status: Connected</span>
 					</div>
-					<p className="mt-1 text-[0.72rem] text-slate-500">HackCrux Hackathon</p>
+					<p className="mt-1 text-[0.72rem] text-slate-500">Use global search to find calls and accounts faster.</p>
 				</div>
 			)}
 		</aside>

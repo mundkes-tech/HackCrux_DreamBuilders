@@ -34,8 +34,8 @@ const TopDeals = ({ token }) => {
     <div className="py-8 text-slate-200">
       <div className="mb-4">
         <div>
-          <h1 className="text-[1.9rem] font-extrabold text-white">🏆 Top Deals</h1>
-          <p className="mt-1.5 text-[0.95rem] text-slate-400">Sales calls with the highest AI-calculated deal probability</p>
+        <h1 className="text-[1.9rem] font-extrabold text-white">Top Opportunities</h1>
+        <p className="mt-1.5 text-[0.95rem] text-slate-400">Prioritized calls ranked by close probability and buying momentum.</p>
         </div>
       </div>
 

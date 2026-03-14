@@ -1,26 +1,88 @@
-import React, { useEffect, useState } from "react";
+import React, { createElement, useEffect, useState } from "react";
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
-  ResponsiveContainer, Cell
+  ResponsiveContainer, Cell,
 } from "recharts";
 import { dashboardApi } from "../api/api";
-import { BarChart3, TrendingDown, AlertOctagon, Package } from "lucide-react";
+import {
+  AlertOctagon,
+  BarChart3,
+  Package,
+  Sparkles,
+  TrendingDown,
+  TrendingUp,
+  Users,
+  Zap,
+} from "lucide-react";
 
-const badgeClassMap = {
-  positive: "border-emerald-500/35 bg-emerald-500/15 text-emerald-300",
-  negative: "border-rose-500/35 bg-rose-500/15 text-rose-300",
-  neutral: "border-amber-400/35 bg-amber-400/12 text-amber-300",
+/* ── Custom tooltip ── */
+const ChartTooltip = ({ active, payload, label }) => {
+  if (!active || !payload?.length) return null;
+  return (
+    <div className="rounded-xl border border-white/12 bg-[#1a1d35] px-3 py-2 text-xs shadow-lg">
+      <p className="font-semibold text-slate-200">{label || payload[0]?.payload?._id}</p>
+      <p className="mt-0.5 text-indigo-300">{payload[0]?.value} occurrence{payload[0]?.value !== 1 ? "s" : ""}</p>
+    </div>
+  );
 };
 
+/* ── Badge ── */
+const badgeClassMap = {
+  positive: "border-emerald-500/35 bg-emerald-500/12 text-emerald-300",
+  negative: "border-rose-500/35 bg-rose-500/12 text-rose-300",
+  neutral: "border-amber-400/35 bg-amber-400/12 text-amber-300",
+};
 const Badge = ({ tone = "neutral", children }) => (
-  <span
-    className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-[0.75rem] font-semibold ${badgeClassMap[tone] || badgeClassMap.neutral}`}
-  >
+  <span className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-[0.72rem] font-semibold ${badgeClassMap[tone] || badgeClassMap.neutral}`}>
     {children}
   </span>
 );
 
-const cardClassName = "rounded-2xl border border-white/12 bg-[#121527eb] p-4";
+/* ── Section card ── */
+const Card = ({ children, className = "" }) => (
+  <div className={`rounded-2xl border border-white/10 bg-[#121527]/90 p-5 shadow-[0_16px_50px_rgba(0,0,0,0.25)] backdrop-blur-md transition hover:border-white/15 ${className}`}>
+    {children}
+  </div>
+);
+
+/* ── Stat card ── */
+const StatCard = ({ icon: StatIcon, label, value, gradient }) => (
+  <div
+    className="group relative overflow-hidden rounded-2xl border border-white/10 bg-[#121527]/90 p-5 shadow-[0_16px_50px_rgba(0,0,0,0.25)] transition duration-200 hover:-translate-y-0.5 hover:border-white/20"
+  >
+    <div
+      className="mb-3 flex h-11 w-11 items-center justify-center rounded-xl text-white shadow-lg"
+      style={{ background: gradient }}
+    >
+      {createElement(StatIcon, { size: 20 })}
+    </div>
+    <p className="text-xs font-medium uppercase tracking-wider text-slate-500">{label}</p>
+    <h3 className="mt-1 text-2xl font-extrabold text-white">{value}</h3>
+    <div
+      className="pointer-events-none absolute -right-4 -top-4 h-20 w-20 rounded-full opacity-15 blur-2xl"
+      style={{ background: gradient }}
+    />
+  </div>
+);
+
+/* ── Progress row ── */
+const ProgressRow = ({ name, count, maxCount, gradient, badge }) => (
+  <div className="flex items-center gap-3">
+    <span className="w-36 shrink-0 truncate text-[0.82rem] text-slate-300">{name}</span>
+    <div className="h-2 flex-1 overflow-hidden rounded-full bg-white/8">
+      <div
+        className="h-full rounded-full transition-all duration-700"
+        style={{ width: `${(count / maxCount) * 100}%`, background: gradient }}
+      />
+    </div>
+    <Badge tone={badge}>{count}×</Badge>
+  </div>
+);
+
+/* ── Loading skeleton ── */
+const Skeleton = ({ className = "" }) => (
+  <div className={`animate-pulse rounded-xl border border-white/6 bg-white/3 ${className}`} />
+);
 
 const Insights = ({ token }) => {
   const [competitors, setCompetitors] = useState(null);
@@ -39,191 +101,227 @@ const Insights = ({ token }) => {
 
   if (loading) {
     return (
-      <div className="py-8 text-slate-200">
-        <div className="mb-4">
-          <h1 className="text-[1.9rem] font-extrabold text-white">Signal Insights</h1>
+      <div className="py-8 animate-in fade-in duration-300">
+        <div className="mb-6">
+          <div className="mb-2 h-9 w-52 rounded-xl bg-white/5" />
+          <div className="h-4 w-80 rounded-lg bg-white/4" />
         </div>
-        <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-          {[...Array(2)].map((_, i) => (
-            <div
-              key={i}
-              className="h-80 animate-pulse rounded-xl border border-white/8 bg-[linear-gradient(110deg,rgba(255,255,255,0.03),rgba(255,255,255,0.08),rgba(255,255,255,0.03))] bg-size-[200%_100%]"
-            />
-          ))}
+        <div className="mb-5 grid grid-cols-2 gap-4 lg:grid-cols-4">
+          {[...Array(4)].map((_, i) => <Skeleton key={i} className="h-28" />)}
+        </div>
+        <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
+          {[...Array(4)].map((_, i) => <Skeleton key={i} className="h-80" />)}
         </div>
       </div>
     );
   }
 
-  // Aggregate objections & buying signals from all calls
-  const objectionMap  = {};
-  const signalMap     = {};
+  /* ── Aggregation ── */
+  const objectionMap = {};
+  const signalMap = {};
   const improvementMap = {};
 
   calls.forEach((call) => {
     const ins = call.aiInsights || {};
-    (ins.objections || []).forEach((o) => { objectionMap[o]  = (objectionMap[o]  || 0) + 1; });
-    (ins.buyingSignals || []).forEach((s) => { signalMap[s]   = (signalMap[s]    || 0) + 1; });
-    (ins.improvementsNeeded || []).forEach((i) => { improvementMap[i] = (improvementMap[i] || 0) + 1; });
+    (ins.objections || []).forEach((o) => { objectionMap[o] = (objectionMap[o] || 0) + 1; });
+    (ins.buyingSignals || []).forEach((s) => { signalMap[s] = (signalMap[s] || 0) + 1; });
+    (ins.improvementsNeeded || []).forEach((im) => { improvementMap[im] = (improvementMap[im] || 0) + 1; });
   });
 
-  const objectionData  = Object.entries(objectionMap).sort((a,b)=>b[1]-a[1]).map(([_id,count])=>({_id,count}));
-  const signalData     = Object.entries(signalMap).sort((a,b)=>b[1]-a[1]).map(([_id,count])=>({_id,count}));
-  const improvementData = Object.entries(improvementMap).sort((a,b)=>b[1]-a[1]).map(([_id,count])=>({_id,count}));
+  const objectionData   = Object.entries(objectionMap).sort((a, b) => b[1] - a[1]).map(([_id, count]) => ({ _id, count }));
+  const signalData      = Object.entries(signalMap).sort((a, b) => b[1] - a[1]).map(([_id, count]) => ({ _id, count }));
+  const improvementData = Object.entries(improvementMap).sort((a, b) => b[1] - a[1]).map(([_id, count]) => ({ _id, count }));
 
-  const comps = competitors?.competitorsFrequency || [];
+  const comps      = competitors?.competitorsFrequency || [];
   const advantages = competitors?.topAdvantages || [];
 
+  const totalCalls      = calls.length;
+  const avgDealProb     = totalCalls
+    ? Math.round(calls.reduce((s, c) => s + (c.aiInsights?.dealProbability || 0), 0) / totalCalls)
+    : 0;
+  const totalSignals    = signalData.reduce((s, d) => s + d.count, 0);
+  const totalObjections = objectionData.reduce((s, d) => s + d.count, 0);
+
+  const emptyState = (msg) => (
+    <div className="rounded-xl border border-dashed border-white/10 py-10 text-center text-sm text-slate-500">
+      {msg}
+    </div>
+  );
+
+  const chartTooltipStyle = {
+    contentStyle: { background: "#161829", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 10, fontSize: 12 },
+    cursor: { fill: "rgba(255,255,255,0.03)" },
+  };
+
   return (
-    <div className="py-8 text-slate-200">
-      <div className="mb-4">
-        <div>
-          <h1 className="text-[1.9rem] font-extrabold text-white">Signal Insights</h1>
-          <p className="mt-1.5 text-[0.95rem] text-slate-400">
-            Aggregated AI intelligence across all analyzed sales calls
-          </p>
+    <div className="py-8 text-slate-200 animate-in fade-in duration-300">
+
+      {/* ── Header ── */}
+      <div className="mb-7">
+        <div className="mb-2 inline-flex items-center gap-1.5 rounded-full border border-indigo-400/25 bg-indigo-500/10 px-3 py-1 text-xs font-semibold text-indigo-300">
+          <Sparkles size={11} />
+          Live conversation intelligence
         </div>
+        <h1 className="text-3xl font-extrabold tracking-tight text-white md:text-4xl">Signal Insights</h1>
+        <p className="mt-2 text-sm text-slate-400 md:text-base">
+          Strategic trends across {totalCalls} analyzed conversations, including objections, buying signals, and competitor pressure.
+        </p>
       </div>
 
-      <div className="mb-6 grid grid-cols-1 gap-4 lg:grid-cols-2">
-        {/* Buying Signals Chart */}
-        <div className={cardClassName}>
-          <div className="mb-3 flex items-center justify-between gap-2">
-            <h3 className="text-base text-slate-50">🟢 Top Buying Signals</h3>
-            <BarChart3 size={18} className="text-emerald-400" />
+      {/* ── Summary stat cards ── */}
+      <div className="mb-7 grid grid-cols-2 gap-4 lg:grid-cols-4">
+        <StatCard icon={BarChart3}   label="Calls Analyzed"    value={totalCalls}      gradient="linear-gradient(135deg,#6C63FF,#8B5CF6)" />
+        <StatCard icon={TrendingUp}  label="Avg Deal Prob."    value={`${avgDealProb}%`} gradient="linear-gradient(135deg,#00D4AA,#06B6D4)" />
+        <StatCard icon={Zap}         label="Buying Signals"    value={totalSignals}    gradient="linear-gradient(135deg,#10B981,#84CC16)" />
+        <StatCard icon={AlertOctagon} label="Total Objections" value={totalObjections} gradient="linear-gradient(135deg,#FB923C,#EF4444)" />
+      </div>
+
+      {/* ── Charts: signals + objections ── */}
+      <div className="mb-5 grid grid-cols-1 gap-5 lg:grid-cols-2">
+
+        {/* Buying Signals */}
+        <Card>
+          <div className="mb-4 flex items-center gap-2.5">
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-500/15 text-emerald-400">
+              <TrendingUp size={17} />
+            </div>
+            <div>
+              <h3 className="text-sm font-bold text-white">Top Buying Signals</h3>
+              <p className="text-xs text-slate-500">Positive purchase intent indicators</p>
+            </div>
+            <Badge tone="positive" className="ml-auto">{signalData.length} types</Badge>
           </div>
           {signalData.length > 0 ? (
-            <ResponsiveContainer width="100%" height={280}>
-              <BarChart data={signalData} layout="vertical" margin={{ left: 10 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" horizontal={false} />
-                <XAxis type="number" tick={{ fontSize: 11, fill: "#9899B5" }} allowDecimals={false} />
-                <YAxis dataKey="_id" type="category" tick={{ fontSize: 10, fill: "#9899B5" }} width={145} />
-                <Tooltip contentStyle={{ background: "#161829", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 8 }} />
-                <Bar dataKey="count" radius={[0, 6, 6, 0]}>
+            <ResponsiveContainer width="100%" height={signalData.length > 5 ? 320 : 220}>
+              <BarChart data={signalData} layout="vertical" margin={{ left: 8, right: 8 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" horizontal={false} />
+                <XAxis type="number" tick={{ fontSize: 11, fill: "#64748b" }} allowDecimals={false} axisLine={false} tickLine={false} />
+                <YAxis dataKey="_id" type="category" tick={{ fontSize: 10, fill: "#94a3b8" }} width={150} axisLine={false} tickLine={false} />
+                <Tooltip {...chartTooltipStyle} content={<ChartTooltip />} />
+                <Bar dataKey="count" radius={[0, 6, 6, 0]} maxBarSize={22}>
                   {signalData.map((_, i) => (
-                    <Cell key={i} fill={`hsl(${165 - i * 15}, 70%, ${55 - i * 2}%)`} />
+                    <Cell key={i} fill={`hsl(${160 - i * 12}, 65%, ${52 - i * 1.5}%)`} />
                   ))}
                 </Bar>
               </BarChart>
             </ResponsiveContainer>
-          ) : (
-            <div className="rounded-xl border border-dashed border-white/14 p-8 text-center text-[0.875rem] text-slate-400">
-              No buying signals detected yet.
-            </div>
-          )}
-        </div>
+          ) : emptyState("No buying signals detected yet.")}
+        </Card>
 
-        {/* Objections Chart */}
-        <div className={cardClassName}>
-          <div className="mb-3 flex items-center justify-between gap-2">
-            <h3 className="text-base text-slate-50">🔴 Top Customer Objections</h3>
-            <TrendingDown size={18} className="text-rose-400" />
+        {/* Objections */}
+        <Card>
+          <div className="mb-4 flex items-center gap-2.5">
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-rose-500/15 text-rose-400">
+              <TrendingDown size={17} />
+            </div>
+            <div>
+              <h3 className="text-sm font-bold text-white">Customer Objections</h3>
+              <p className="text-xs text-slate-500">Pricing, timing & feature concerns</p>
+            </div>
+            <Badge tone="negative" className="ml-auto">{objectionData.length} types</Badge>
           </div>
           {objectionData.length > 0 ? (
-            <ResponsiveContainer width="100%" height={280}>
-              <BarChart data={objectionData} layout="vertical" margin={{ left: 10 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" horizontal={false} />
-                <XAxis type="number" tick={{ fontSize: 11, fill: "#9899B5" }} allowDecimals={false} />
-                <YAxis dataKey="_id" type="category" tick={{ fontSize: 10, fill: "#9899B5" }} width={145} />
-                <Tooltip contentStyle={{ background: "#161829", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 8 }} />
-                <Bar dataKey="count" radius={[0, 6, 6, 0]}>
+            <ResponsiveContainer width="100%" height={objectionData.length > 5 ? 320 : 220}>
+              <BarChart data={objectionData} layout="vertical" margin={{ left: 8, right: 8 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" horizontal={false} />
+                <XAxis type="number" tick={{ fontSize: 11, fill: "#64748b" }} allowDecimals={false} axisLine={false} tickLine={false} />
+                <YAxis dataKey="_id" type="category" tick={{ fontSize: 10, fill: "#94a3b8" }} width={150} axisLine={false} tickLine={false} />
+                <Tooltip {...chartTooltipStyle} content={<ChartTooltip />} />
+                <Bar dataKey="count" radius={[0, 6, 6, 0]} maxBarSize={22}>
                   {objectionData.map((_, i) => (
-                    <Cell key={i} fill={`hsl(${0 + i * 10}, 70%, ${55 - i * 2}%)`} />
+                    <Cell key={i} fill={`hsl(${5 + i * 8}, 70%, ${55 - i * 2}%)`} />
                   ))}
                 </Bar>
               </BarChart>
             </ResponsiveContainer>
-          ) : (
-            <div className="rounded-xl border border-dashed border-white/14 p-8 text-center text-[0.875rem] text-slate-400">
-              No objections detected yet.
-            </div>
-          )}
-        </div>
+          ) : emptyState("No objections detected yet.")}
+        </Card>
       </div>
 
-      {/* Improvements Needed */}
+      {/* ── Improvements ── */}
       {improvementData.length > 0 && (
-        <div className={`${cardClassName} mb-6`}>
-          <div className="mb-3 flex items-center justify-between gap-2">
-            <h3 className="text-base text-slate-50">🔧 Product Improvements Needed</h3>
-            <Package size={18} className="text-indigo-400" />
+        <Card className="mb-5">
+          <div className="mb-5 flex items-center gap-2.5">
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-indigo-500/15 text-indigo-400">
+              <Package size={17} />
+            </div>
+            <div>
+              <h3 className="text-sm font-bold text-white">Product Improvements Needed</h3>
+              <p className="text-xs text-slate-500">Most-requested gaps from customer feedback</p>
+            </div>
           </div>
-          <div className="flex flex-col gap-3">
+          <div className="flex flex-col gap-4">
             {improvementData.map((item, i) => (
-              <div key={i} className="flex items-center gap-3">
-                <span className="w-45 text-[0.85rem] text-slate-300 lg:w-35">{item._id}</span>
-                <div className="h-2 w-full max-w-62.5 flex-1 overflow-hidden rounded-full bg-white/12">
-                  <div
-                    className="h-full rounded-full"
-                    style={{
-                      width: `${(item.count / improvementData[0].count) * 100}%`,
-                      background: "linear-gradient(135deg,#6C63FF,#00D4AA)",
-                    }}
-                  />
-                </div>
-                <Badge tone="neutral">{item.count}x</Badge>
-              </div>
+              <ProgressRow
+                key={i}
+                name={item._id}
+                count={item.count}
+                maxCount={improvementData[0].count}
+                gradient="linear-gradient(90deg,#6C63FF,#00D4AA)"
+                badge="neutral"
+              />
             ))}
           </div>
-        </div>
+        </Card>
       )}
 
-      {/* Competitor Mentions */}
-      <div className={`${cardClassName} mb-6`}>
-        <div className="mb-3 flex items-center justify-between gap-2">
-          <h3 className="text-base text-slate-50">🏢 Competitor Mentions</h3>
-          <AlertOctagon size={18} className="text-amber-300" />
-        </div>
-        {comps.length > 0 ? (
-          <div className="flex flex-col gap-3">
-            {comps.map((c, i) => (
-              <div key={i} className="flex items-center gap-3">
-                <span className="w-45 text-[0.85rem] text-slate-300 lg:w-35">{c.name}</span>
-                <div className="h-2 w-full max-w-62.5 flex-1 overflow-hidden rounded-full bg-white/12">
-                  <div
-                    className="h-full rounded-full"
-                    style={{
-                      width: `${(c.count / comps[0].count) * 100}%`,
-                      background: "linear-gradient(135deg,#FFB347,#FF8C42)",
-                    }}
-                  />
-                </div>
-                <Badge tone="neutral">{c.count} mentions</Badge>
-              </div>
-            ))}
+      {/* ── Competitors + Advantages ── */}
+      <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
+
+        {/* Competitor mentions */}
+        <Card>
+          <div className="mb-5 flex items-center gap-2.5">
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-amber-500/15 text-amber-400">
+              <AlertOctagon size={17} />
+            </div>
+            <div>
+              <h3 className="text-sm font-bold text-white">Competitor Mentions</h3>
+              <p className="text-xs text-slate-500">How often alternatives were discussed</p>
+            </div>
           </div>
-        ) : (
-          <div className="rounded-xl border border-dashed border-white/14 p-8 text-center text-[0.875rem] text-slate-400">
-            No competitor mentions detected yet.
+          {comps.length > 0 ? (
+            <div className="flex flex-col gap-4">
+              {comps.map((c, i) => (
+                <ProgressRow
+                  key={i}
+                  name={c.name}
+                  count={c.count}
+                  maxCount={comps[0].count}
+                  gradient="linear-gradient(90deg,#FFB347,#FF8C42)"
+                  badge="neutral"
+                />
+              ))}
+            </div>
+          ) : emptyState("No competitor mentions detected yet.")}
+        </Card>
+
+        {/* Why customers prefer competitors */}
+        <Card>
+          <div className="mb-5 flex items-center gap-2.5">
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-rose-500/15 text-rose-400">
+              <Users size={17} />
+            </div>
+            <div>
+              <h3 className="text-sm font-bold text-white">Why Customers Prefer Competitors</h3>
+              <p className="text-xs text-slate-500">Top perceived advantages of competitors</p>
+            </div>
           </div>
-        )}
+          {advantages.length > 0 ? (
+            <div className="flex flex-col gap-4">
+              {advantages.map((a, i) => (
+                <ProgressRow
+                  key={i}
+                  name={a.advantage}
+                  count={a.count}
+                  maxCount={advantages[0].count}
+                  gradient="linear-gradient(90deg,#FB7185,#EF4444)"
+                  badge="negative"
+                />
+              ))}
+            </div>
+          ) : emptyState("No competitor advantage data yet.")}
+        </Card>
       </div>
-
-      {/* Competitor Advantages */}
-      {advantages.length > 0 && (
-        <div className={cardClassName}>
-          <div className="mb-3 flex items-center justify-between gap-2">
-            <h3 className="text-base text-slate-50">⚡ Why Customers Prefer Competitors</h3>
-          </div>
-          <div className="flex flex-col gap-3">
-            {advantages.map((a, i) => (
-              <div key={i} className="flex items-center gap-3">
-                <span className="w-45 text-[0.85rem] text-slate-300 lg:w-35">{a.advantage}</span>
-                <div className="h-2 w-full max-w-62.5 flex-1 overflow-hidden rounded-full bg-white/12">
-                  <div
-                    className="h-full rounded-full"
-                    style={{
-                      width: `${(a.count / advantages[0].count) * 100}%`,
-                      background: "linear-gradient(135deg,#FB7185,#EF4444)",
-                    }}
-                  />
-                </div>
-                <Badge tone="negative">{a.count}x</Badge>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
     </div>
   );
 };

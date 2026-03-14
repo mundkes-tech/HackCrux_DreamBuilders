@@ -97,14 +97,16 @@ export const getProfile = async (req, res) => {
 
 export const updateProfile = async (req, res) => {
   try {
-    const userId = req.user.userId; // Set by auth middleware
-    const { name, email } = req.body;
+    const userId = req.user.userId;
+    const { name, email, company_name, currentPassword, newPassword } = req.body;
 
-    const updateData = {};
-    if (name) updateData.name = name;
-    if (email) updateData.email = email.toLowerCase();
-
-    const user = await AuthService.updateUserProfile(userId, updateData);
+    const user = await AuthService.updateUserProfile(userId, {
+      name,
+      email,
+      company_name,
+      currentPassword,
+      newPassword,
+    });
 
     res.status(200).json({
       success: true,
@@ -116,6 +118,23 @@ export const updateProfile = async (req, res) => {
     res.status(400).json({
       success: false,
       message: error.message || "Failed to update profile",
+    });
+  }
+};
+
+export const deleteAccount = async (req, res) => {
+  try {
+    const userId = req.user.userId;
+    await AuthService.deleteUserAccount(userId);
+    res.status(200).json({
+      success: true,
+      message: "Account deleted successfully",
+    });
+  } catch (error) {
+    console.error("Delete account error:", error);
+    res.status(500).json({
+      success: false,
+      message: error.message || "Failed to delete account",
     });
   }
 };

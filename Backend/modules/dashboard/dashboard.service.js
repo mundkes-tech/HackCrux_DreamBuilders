@@ -66,8 +66,8 @@ export const getAllCalls = async () => {
 
 export const getCallDetails = async (callId) => {
   try {
-    const call = await CallModel.findById(callId);
-    return call;
+    const calls = await CallModel.findAll({ callId });
+    return calls[0] || null;
   } catch (error) {
     console.error("Error fetching call details:", error);
     throw error;
@@ -76,7 +76,7 @@ export const getCallDetails = async (callId) => {
 
 export const getAnalytics = async () => {
   try {
-    const allCalls = await CallModel.findAll();
+    const allCalls = await CallModel.findAll({});
     const analyzedCalls = await CallModel.findAll({ status: "analyzed" });
 
     const totalCalls = analyzedCalls.length;
@@ -266,7 +266,8 @@ export const getCompetitorAnalysis = async () => {
 };
 
 export const updateCallMetadata = async (callId, metadata = {}) => {
-  const existingCall = await CallModel.findById(callId);
+  const existing = await CallModel.findAll({ callId });
+  const existingCall = existing[0] || null;
   if (!existingCall) {
     throw new Error("Call not found");
   }
@@ -293,11 +294,13 @@ export const updateCallMetadata = async (callId, metadata = {}) => {
     "aiInsights.customer.phone": customerPhone,
   });
 
-  return await CallModel.findById(callId);
+  const updated = await CallModel.findAll({ callId });
+  return updated[0] || null;
 };
 
 export const buildCallReport = async (callId) => {
-  const call = await CallModel.findById(callId);
+  const calls = await CallModel.findAll({ callId });
+  const call = calls[0] || null;
   if (!call) throw new Error("Call not found");
 
   const insights = call.aiInsights || {};

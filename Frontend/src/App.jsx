@@ -100,6 +100,15 @@ function App() {
     setAuth(null);
   };
 
+  const handleUserUpdate = (updatedUser) => {
+    setAuth((prev) => {
+      if (!prev) return prev;
+      const next = { ...prev, user: { ...prev.user, ...updatedUser } };
+      persistAuth(next, prev.remember);
+      return next;
+    });
+  };
+
   if (isCheckingSession) {
     return <FullScreenLoader />;
   }
@@ -128,7 +137,7 @@ function App() {
           path='/dashboard/*'
           element={(
             <ProtectedRoute isAuthenticated={Boolean(auth?.token)}>
-              <Dashboard user={auth?.user} token={auth?.token} onLogout={handleLogout} />
+              <Dashboard user={auth?.user} token={auth?.token} onLogout={handleLogout} onUserUpdate={handleUserUpdate} />
             </ProtectedRoute>
           )}
         />

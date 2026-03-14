@@ -153,7 +153,6 @@ function CallDetail({ token }) {
   const [downloading, setDownloading] = useState(false);
   const [savingMeta, setSavingMeta] = useState(false);
   const [editMode, setEditMode] = useState(false);
-  const [callMetaOverrides, setCallMetaOverrides] = useState({});
   const [call, setCall] = useState(null);
   const [loading, setLoading] = useState(true);
   const [metaForm, setMetaForm] = useState({
@@ -183,6 +182,7 @@ function CallDetail({ token }) {
         }
       } catch (error) {
         setFeedback({ type: 'error', message: 'Error loading call details' });
+        console.error(error);
       } finally {
         setLoading(false);
       }
@@ -278,7 +278,7 @@ function CallDetail({ token }) {
       URL.revokeObjectURL(objectUrl);
 
       setFeedback({ type: 'success', message: 'Report downloaded successfully.' });
-    } catch (error) {
+    } catch {
       setFeedback({ type: 'error', message: 'Failed to download report. Please try again.' });
     } finally {
       setDownloading(false);
@@ -288,18 +288,15 @@ function CallDetail({ token }) {
   const saveMetadata = async () => {
     setSavingMeta(true);
     setTimeout(() => {
-      setCallMetaOverrides((current) => ({
-        ...current,
-        [callId]: {
-          ...(current[callId] || {}),
-          call_title: metaForm.callTitle,
-          call_type: metaForm.callType,
-          product_name: metaForm.productName,
-          customer_name: metaForm.customerName,
-          customer_email: metaForm.customerEmail,
-          customer_phone: metaForm.customerPhone,
-        },
-      }));
+      setCall((prev) => prev ? ({
+        ...prev,
+        call_title: metaForm.callTitle,
+        call_type: metaForm.callType,
+        product_name: metaForm.productName,
+        customer_name: metaForm.customerName,
+        customer_email: metaForm.customerEmail,
+        customer_phone: metaForm.customerPhone,
+      }) : prev);
       setSavingMeta(false);
       setEditMode(false);
       setFeedback({ type: 'success', message: 'Metadata updated locally.' });

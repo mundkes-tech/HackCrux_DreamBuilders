@@ -1,4 +1,4 @@
-import { useCallback, useRef, useState } from 'react';
+import { createElement, useCallback, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
 	CheckCircle,
@@ -9,6 +9,7 @@ import {
 	Info,
 	Loader2,
 	Mic,
+	Sparkles,
 	Type,
 	Upload,
 	X,
@@ -16,41 +17,25 @@ import {
 } from 'lucide-react';
 
 const PIPELINE_STEPS = [
-	{ key: 'uploading', label: 'Uploading file', description: 'Saving to server' },
-	{ key: 'transcribing', label: 'Transcribing with Groq Whisper', description: 'Speech to Text' },
-	{ key: 'analyzing', label: 'Analyzing with LLaMA-3.3-70b', description: 'GPT intelligence' },
-	{ key: 'done', label: 'Insights ready!', description: 'Redirecting...' },
+	{ key: 'uploading', label: 'Uploading file', description: 'Saving to server', color: '#6C63FF' },
+	{ key: 'transcribing', label: 'Transcribing with Groq Whisper', description: 'Speech to Text', color: '#00D4AA' },
+	{ key: 'analyzing', label: 'Analyzing with LLaMA-3.3-70b', description: 'GPT intelligence', color: '#F59E0B' },
+	{ key: 'done', label: 'Insights ready!', description: 'Redirecting…', color: '#10B981' },
 ];
 
 const DETECTION_ITEMS = [
-	{ icon: '🎙️', label: 'Full Transcript', description: 'Groq Whisper speech-to-text' },
-	{ icon: '📝', label: 'Call Summary', description: 'Detailed 3-5 sentence overview' },
-	{ icon: '🏢', label: 'Product Detected', description: 'What product or service was discussed' },
-	{ icon: '✅', label: 'Buying Signals', description: 'Positive purchase intent indicators' },
-	{ icon: '⚠️', label: 'Customer Objections', description: 'Pricing, timing, feature concerns' },
-	{ icon: '😊', label: 'Positive Points', description: 'What customer genuinely liked' },
-	{ icon: '🏁', label: 'Competitor Mentions', description: 'Alternative products discussed' },
-	{ icon: '📉', label: 'Competitor Advantages', description: 'Why customer prefers competitors' },
-	{ icon: '🔧', label: 'Improvements Needed', description: 'Product weaknesses from feedback' },
-	{ icon: '💬', label: 'Customer Sentiment', description: 'Positive, Neutral, or Negative' },
-	{ icon: '📊', label: 'Deal Probability', description: '0-100% close likelihood score' },
-	{ icon: '📧', label: 'Follow-Up Action', description: 'AI-suggested next steps' },
-	{ icon: '🎤', label: 'Salesperson Tone', description: 'Tone shifts and emotional intelligence' },
-	{ icon: '⭐', label: 'Salesperson Rating', description: '1-10 score with 11 skill breakdowns' },
-	{ icon: '💪', label: 'Strengths & Weaknesses', description: 'What rep did well and where to improve' },
-	{ icon: '💡', label: 'Coaching Tips', description: 'Actionable tips to boost performance' },
-	{ icon: '🎯', label: 'Missed Opportunities', description: 'Moments the rep could have leveraged' },
-	{ icon: '📞', label: 'Call Phase Scores', description: 'Opening to Discovery to Close ratings' },
-	{ icon: '🗣️', label: 'Talk Ratio Analysis', description: 'Rep vs Customer speaking balance' },
-	{ icon: '❓', label: 'Question Analysis', description: 'Questions asked by both parties' },
-	{ icon: '🔥', label: 'Pain Points', description: 'Customer frustrations and needs' },
-	{ icon: '🏷️', label: 'Key Topics', description: 'Main discussion themes extracted' },
-	{ icon: '💰', label: 'Pricing Discussion', description: 'Budget and pricing conversation analysis' },
-	{ icon: '👤', label: 'Decision Makers', description: 'Who has buying authority' },
-	{ icon: '✅', label: 'Action Items', description: 'Agreed to-dos and next steps' },
-	{ icon: '🛡️', label: 'Objection Handling', description: 'How each objection was addressed' },
-	{ icon: '⚡', label: 'Key Moments', description: 'Pivotal breakthroughs and risk moments' },
-	{ icon: '🔄', label: 'Engagement & Urgency', description: 'Customer interest and timeline pressure' },
+	{ icon: '🎙️', label: 'Full Transcript', description: 'Groq Whisper speech-to-text', color: '#6C63FF' },
+	{ icon: '📝', label: 'Call Summary', description: 'Detailed 3-5 sentence overview', color: '#00D4AA' },
+	{ icon: '✅', label: 'Buying Signals', description: 'Positive purchase intent indicators', color: '#10B981' },
+	{ icon: '⚠️', label: 'Objections', description: 'Pricing, timing, feature concerns', color: '#F59E0B' },
+	{ icon: '😊', label: 'Sentiment Analysis', description: 'Positive, Neutral, or Negative', color: '#EC4899' },
+	{ icon: '📊', label: 'Deal Probability', description: '0-100% close likelihood score', color: '#8B5CF6' },
+	{ icon: '📧', label: 'Follow-Up Action', description: 'AI-suggested next steps', color: '#06B6D4' },
+	{ icon: '⭐', label: 'Salesperson Rating', description: '1-10 score with skill breakdowns', color: '#F97316' },
+	{ icon: '🎯', label: 'Missed Opportunities', description: 'Moments the rep could have leveraged', color: '#EF4444' },
+	{ icon: '🏁', label: 'Competitor Mentions', description: 'Alternative products discussed', color: '#84CC16' },
+	{ icon: '💡', label: 'Coaching Tips', description: 'Actionable tips to boost performance', color: '#A78BFA' },
+	{ icon: '🔥', label: 'Pain Points', description: 'Customer frustrations and needs', color: '#FB923C' },
 ];
 
 const PIPELINE_ITEMS = [
@@ -72,9 +57,6 @@ const PIPELINE_ITEMS = [
 const ACCEPTED_EXTENSIONS = ['.mp3', '.wav', '.m4a', '.ogg', '.webm', '.flac', '.aac', '.mp4'];
 const MAX_FILE_SIZE = 50 * 1024 * 1024;
 
-const cardClassName = 'rounded-2xl border border-white/10 bg-[#121527]/90 p-5 shadow-[0_16px_50px_rgba(0,0,0,0.25)] backdrop-blur-md';
-const inputClassName = 'w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none transition placeholder:text-slate-500 focus:border-indigo-400/50 focus:bg-white/8';
-const tabBaseClassName = 'inline-flex items-center gap-2 rounded-xl px-5 py-2.5 text-sm font-semibold transition';
 const formatFileSize = (size) => `${(size / (1024 * 1024)).toFixed(2)} MB`;
 
 const isAcceptedFile = (file) => {
@@ -100,23 +82,15 @@ function AnalyzeCall({ token }) {
 	const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api';
 
 	const setSelectedFile = useCallback((file) => {
-		if (!file) {
-			return;
-		}
-
+		if (!file) return;
 		if (file.size > MAX_FILE_SIZE) {
 			setFeedback({ type: 'error', message: 'File too large. Maximum size is 50MB.' });
 			return;
 		}
-
 		if (!isAcceptedFile(file)) {
-			setFeedback({
-				type: 'error',
-				message: 'Invalid format. Use mp3, wav, m4a, ogg, webm, flac, aac, or mp4.',
-			});
+			setFeedback({ type: 'error', message: 'Invalid format. Use mp3, wav, m4a, ogg, webm, flac, aac, or mp4.' });
 			return;
 		}
-
 		setFeedback(null);
 		setAudioFile(file);
 	}, []);
@@ -139,71 +113,53 @@ function AnalyzeCall({ token }) {
 		setSelectedFile(file);
 	}, [setSelectedFile]);
 
-	// Step 1: Upload Audio
 	const uploadAudio = async () => {
 		const formData = new FormData();
 		formData.append('audio', audioFile);
 		formData.append('customer_name', customerName || 'Unknown');
 		formData.append('customer_email', customerEmail);
 		formData.append('customer_phone', customerPhone || '');
-
 		const response = await fetch(`${API_BASE_URL}/audio/upload`, {
 			method: 'POST',
 			headers: { 'Authorization': `Bearer ${token}` },
-			body: formData
+			body: formData,
 		});
-
 		const data = await response.json();
 		if (!response.ok) throw new Error(data.message || 'Upload failed');
 		return data.callId;
 	};
 
-	// Step 2: Transcribe
 	const transcribeAudio = async (cId) => {
 		const response = await fetch(`${API_BASE_URL}/transcription/transcribe/${cId}`, {
 			method: 'POST',
-			headers: {
-				'Authorization': `Bearer ${token}`,
-				'Content-Type': 'application/json'
-			}
+			headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
 		});
-
 		const data = await response.json();
 		if (!response.ok) throw new Error(data.message || 'Transcription failed');
 		return data.transcript;
 	};
 
-	// Step 3: Analyze
 	const analyzeCall = async (cId) => {
 		const response = await fetch(`${API_BASE_URL}/ai/analyze/${cId}`, {
 			method: 'POST',
-			headers: {
-				'Authorization': `Bearer ${token}`,
-				'Content-Type': 'application/json'
-			}
+			headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
 		});
-
 		const data = await response.json();
 		if (!response.ok) throw new Error(data.message || 'Analysis failed');
 		return data.insights;
 	};
 
-	// Upload text
 	const uploadText = async () => {
 		const response = await fetch(`${API_BASE_URL}/audio/upload-text`, {
 			method: 'POST',
-			headers: {
-				'Authorization': `Bearer ${token}`,
-				'Content-Type': 'application/json'
-			},
+			headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
 			body: JSON.stringify({
 				text: textContent,
 				customer_name: customerName || 'Unknown',
 				customer_email: customerEmail,
-				customer_phone: customerPhone || ''
-			})
+				customer_phone: customerPhone || '',
+			}),
 		});
-
 		const data = await response.json();
 		if (!response.ok) throw new Error(data.message || 'Upload failed');
 		return data.callId;
@@ -212,27 +168,21 @@ function AnalyzeCall({ token }) {
 	const handleSubmit = async (event) => {
 		event.preventDefault();
 		setFeedback(null);
-
 		if (inputType === 'audio' && !audioFile) {
 			setFeedback({ type: 'error', message: 'Please select an audio or video file first.' });
 			return;
 		}
-
 		if (inputType === 'text' && !textContent.trim()) {
 			setFeedback({ type: 'error', message: 'Please enter the text format speech.' });
 			return;
 		}
-
 		if (!customerEmail) {
 			setFeedback({ type: 'error', message: 'Please enter customer email.' });
 			return;
 		}
-
 		resetPipeline();
 		setStep('uploading');
-
 		try {
-			// STEP 1: Upload
 			let cId;
 			if (inputType === 'audio') {
 				cId = await uploadAudio();
@@ -240,193 +190,219 @@ function AnalyzeCall({ token }) {
 				cId = await uploadText();
 			}
 			setCompletedSteps(['uploading']);
-
-			// Only transcribe if not text input
 			if (inputType === 'audio') {
 				setStep('transcribing');
 				await transcribeAudio(cId);
 				setCompletedSteps(['uploading', 'transcribing']);
 			}
-
-			// STEP 3: Analyze
 			setStep('analyzing');
 			await analyzeCall(cId);
 			setCompletedSteps(['uploading', 'transcribing', 'analyzing', 'done']);
 			setStep('done');
-
-			// Redirect to full call details page so all generated insights are visible.
-			setTimeout(() => {
-				navigate(`/dashboard/calls/${cId}`);
-			}, 600);
-
+			setTimeout(() => navigate(`/dashboard/calls/${cId}`), 600);
 		} catch (error) {
 			resetPipeline();
 			setFeedback({ type: 'error', message: error.message });
 		}
 	};
 
+	/* ─── Pipeline / Loading screen ─── */
 	if (step) {
+		const progress = step === 'done' ? 100 : Math.round(((completedSteps.length) / (PIPELINE_STEPS.length - 1)) * 100);
+
 		return (
-			<div className="py-8">
-				<div className="flex min-h-[60vh] flex-col items-center justify-center gap-6 text-center">
-					<div className="flex h-24 w-24 items-center justify-center rounded-full bg-[rgba(108,99,255,0.12)] shadow-[0_0_40px_rgba(108,99,255,0.18)]">
+			<div className="flex min-h-[80vh] flex-col items-center justify-center py-10 text-center animate-in fade-in duration-300">
+				{/* Glow orb */}
+				<div className="relative mb-8">
+					<div className={`h-28 w-28 rounded-full flex items-center justify-center ${step === 'done' ? 'bg-emerald-500/10' : 'bg-indigo-500/10'} shadow-[0_0_60px_rgba(108,99,255,0.2)]`}>
 						{step === 'done' ? (
-							<CheckCircle size={56} className="text-[#00D4AA]" />
+							<CheckCircle size={60} className="text-emerald-400" />
 						) : (
-							<Loader2 size={56} className="animate-spin text-[#6C63FF]" />
+							<Loader2 size={60} className="animate-spin text-indigo-400" />
 						)}
 					</div>
+					<div className="pointer-events-none absolute inset-0 rounded-full blur-2xl opacity-30" style={{ background: 'radial-gradient(circle, #6C63FF, transparent)' }} />
+				</div>
 
-					<div>
-						<h2 className="bg-gradient-to-r from-indigo-300 via-cyan-300 to-emerald-300 bg-clip-text text-3xl font-extrabold text-transparent">
-							{step === 'done' ? 'Analysis Complete!' : 'AI Pipeline Running...'}
-						</h2>
-						<p className="mt-3 text-sm text-slate-400">
-							{step === 'uploading' && inputType === 'audio'
-								? `Uploading: ${uploadProgress}%`
-								: 'Please wait, this may take a moment...' }
-						</p>
+				<h2 className="bg-gradient-to-r from-indigo-300 via-cyan-300 to-emerald-300 bg-clip-text text-4xl font-extrabold tracking-tight text-transparent">
+					{step === 'done' ? 'Analysis Complete!' : 'AI Pipeline Running…'}
+				</h2>
+				<p className="mt-3 max-w-sm text-sm text-slate-400">
+					{step === 'uploading' && inputType === 'audio'
+						? `Uploading: ${uploadProgress}%`
+						: step === 'done'
+							? 'Redirecting you to your insights…'
+							: 'Please wait — LLMs are working their magic.'}
+				</p>
+
+				{/* Progress bar */}
+				<div className="mt-6 w-full max-w-sm">
+					<div className="mb-1.5 flex justify-between text-xs text-slate-500">
+						<span>Progress</span>
+						<span>{progress}%</span>
 					</div>
+					<div className="h-2 overflow-hidden rounded-full bg-white/8">
+						<div
+							className="h-full rounded-full bg-gradient-to-r from-indigo-500 via-cyan-400 to-emerald-400 transition-all duration-700"
+							style={{ width: `${progress}%` }}
+						/>
+					</div>
+				</div>
 
-					<div className="flex w-full max-w-[360px] flex-col gap-3">
-						{PIPELINE_STEPS.map((pipelineStep) => {
-							const isDone = completedSteps.includes(pipelineStep.key);
-							const isCurrent = step === pipelineStep.key && !isDone;
-							const stepClassName = isDone
-								? 'border border-emerald-400/20 bg-emerald-400/10 text-emerald-300'
-								: isCurrent
-									? 'border border-indigo-400/35 bg-indigo-400/10 text-indigo-300'
-									: 'border border-white/8 bg-white/4 text-slate-400';
-
-							return (
-								<div key={pipelineStep.key} className={`flex items-center gap-3 rounded-xl px-4 py-3 text-left ${stepClassName}`}>
+				{/* Steps */}
+				<div className="mt-8 flex w-full max-w-sm flex-col gap-3">
+					{PIPELINE_STEPS.map((ps, idx) => {
+						const isDone = completedSteps.includes(ps.key);
+						const isCurrent = step === ps.key && !isDone;
+						return (
+							<div
+								key={ps.key}
+								className={`flex items-center gap-3 rounded-2xl border px-4 py-3.5 text-left transition-all duration-300 ${
+									isDone
+										? 'border-emerald-500/25 bg-emerald-500/10'
+										: isCurrent
+											? 'border-indigo-500/35 bg-indigo-500/10 shadow-[0_0_24px_rgba(108,99,255,0.12)]'
+											: 'border-white/6 bg-white/3 opacity-50'
+								}`}
+							>
+								<div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-sm font-bold ${
+									isDone ? 'bg-emerald-500/20 text-emerald-400' : isCurrent ? 'bg-indigo-500/20 text-indigo-400' : 'bg-white/8 text-slate-500'
+								}`}>
 									{isDone ? (
-										<CheckCircle size={18} className="shrink-0 text-[#00D4AA]" />
+										<CheckCircle size={16} />
 									) : isCurrent ? (
-										<Loader2 size={18} className="shrink-0 animate-spin text-[#6C63FF]" />
+										<Loader2 size={15} className="animate-spin" />
 									) : (
-										<div className="h-[18px] w-[18px] shrink-0 rounded-full border-2 border-white/10 bg-white/10" />
+										idx + 1
 									)}
-									<div>
-										<span className="block text-sm font-semibold">{pipelineStep.label}</span>
-										<span className="mt-0.5 block text-xs opacity-70">{pipelineStep.description}</span>
-									</div>
 								</div>
-							);
-						})}
-					</div>
-
-					{step === 'uploading' && inputType === 'audio' ? (
-						<div className="w-full max-w-[360px]">
-							<div className="h-2.5 overflow-hidden rounded-full bg-white/10">
-								<div className="h-full rounded-full bg-gradient-to-r from-indigo-500 to-cyan-400" style={{ width: `${uploadProgress}%` }} />
+								<div className="flex-1">
+									<span className={`block text-sm font-semibold ${isDone ? 'text-emerald-300' : isCurrent ? 'text-indigo-200' : 'text-slate-400'}`}>
+										{ps.label}
+									</span>
+									<span className="block text-xs opacity-60 text-slate-400">{ps.description}</span>
+								</div>
 							</div>
-							<p className="mt-2 text-center text-xs text-slate-400">{uploadProgress}% uploaded</p>
-						</div>
-					) : null}
+						);
+					})}
 				</div>
 			</div>
 		);
 	}
 
+	/* ─── Main form ─── */
+	const canSubmit = inputType === 'audio' ? !!audioFile : !!textContent.trim();
+
 	return (
 		<div className="py-8 text-slate-200 animate-in fade-in duration-300">
-			<div className="mb-6 flex flex-wrap items-start justify-between gap-4">
-				<div>
-					<h1 className="text-3xl font-extrabold tracking-tight text-white md:text-4xl">Analyze Sales Call</h1>
-					<p className="mt-2 max-w-3xl text-sm text-slate-400 md:text-base">
-						Upload an audio or video recording or paste text and AI will analyze it automatically.
-					</p>
+
+			{/* ── Header ── */}
+			<div className="mb-8">
+				<div className="mb-3 inline-flex items-center gap-2 rounded-full border border-indigo-400/25 bg-indigo-500/10 px-3.5 py-1.5 text-xs font-semibold text-indigo-300">
+					<Sparkles size={12} />
+					Powered by Groq Whisper + LLaMA-3.3-70b
 				</div>
+				<h1 className="text-3xl font-extrabold tracking-tight text-white md:text-4xl">
+					Conversation Analysis Studio
+				</h1>
+				<p className="mt-2 max-w-2xl text-sm text-slate-400 md:text-base">
+					Upload recordings or paste transcripts to generate structured call intelligence, rep coaching feedback, and next-step recommendations.
+				</p>
 			</div>
 
-			<div className="mb-6 inline-flex flex-wrap gap-2 rounded-2xl border border-white/10 bg-[#121527]/90 p-1 shadow-[0_16px_50px_rgba(0,0,0,0.2)] backdrop-blur-md">
-				<button
-					type="button"
-					className={`${tabBaseClassName} ${inputType === 'audio' ? 'bg-[#6C63FF] text-white shadow-[0_10px_30px_rgba(108,99,255,0.35)]' : 'bg-transparent text-slate-400 hover:bg-white/5 hover:text-slate-100'}`}
-					onClick={() => setInputType('audio')}
-				>
-					<FileAudio size={16} />
-					1. Audio / Video upload
-				</button>
-				<button
-					type="button"
-					className={`${tabBaseClassName} ${inputType === 'text' ? 'bg-[#6C63FF] text-white shadow-[0_10px_30px_rgba(108,99,255,0.35)]' : 'bg-transparent text-slate-400 hover:bg-white/5 hover:text-slate-100'}`}
-					onClick={() => setInputType('text')}
-				>
-					<Type size={16} />
-					2. Add the text format speech
-				</button>
+			{/* ── Input type tabs ── */}
+			<div className="mb-6 inline-flex gap-1 rounded-2xl border border-white/10 bg-[#0f1120] p-1.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
+				{[
+					{ key: 'audio', icon: FileAudio, label: 'Audio / Video Upload' },
+					{ key: 'text', icon: Type, label: 'Paste Text Transcript' },
+				].map(({ key, icon: TabIcon, label }) => (
+					<button
+						key={key}
+						type="button"
+						onClick={() => setInputType(key)}
+						className={`inline-flex items-center gap-2 rounded-xl px-5 py-2.5 text-sm font-semibold transition-all duration-200 ${
+							inputType === key
+								? 'bg-gradient-to-r from-indigo-600 to-indigo-500 text-white shadow-[0_8px_24px_rgba(108,99,255,0.35)]'
+								: 'text-slate-400 hover:bg-white/5 hover:text-slate-100'
+						}`}
+					>
+						{createElement(TabIcon, { size: 15 })}
+						{label}
+					</button>
+				))}
 			</div>
 
-			{feedback ? (
-				<div className={`mb-6 rounded-2xl border px-4 py-3 text-sm ${feedback.type === 'error' ? 'border-rose-500/20 bg-rose-500/10 text-rose-200' : 'border-emerald-500/20 bg-emerald-500/10 text-emerald-200'}`}>
+			{/* ── Error / success feedback ── */}
+			{feedback && (
+				<div className={`mb-6 flex items-center gap-2.5 rounded-2xl border px-4 py-3 text-sm ${
+					feedback.type === 'error'
+						? 'border-rose-500/25 bg-rose-500/10 text-rose-300'
+						: 'border-emerald-500/25 bg-emerald-500/10 text-emerald-300'
+				}`}>
+					<X size={15} className="shrink-0" />
 					{feedback.message}
 				</div>
-			) : null}
+			)}
 
-			<div className="grid items-start gap-6 lg:grid-cols-[1.5fr_1fr]">
-				<form className="flex flex-col gap-6" onSubmit={handleSubmit}>
-					<section className={cardClassName}>
-						<h3 className="mb-4 text-lg font-bold text-white">Customer Details</h3>
-						<div className="grid gap-4">
-							<input
-								type="text"
-								placeholder="Customer Name"
-								value={customerName}
-								onChange={(event) => setCustomerName(event.target.value)}
-								className={inputClassName}
-							/>
-							<input
-								type="email"
-								placeholder="Customer Email (Optional)"
-								value={customerEmail}
-								onChange={(event) => setCustomerEmail(event.target.value)}
-								className={inputClassName}
-							/>
-							<input
-								type="tel"
-								placeholder="Customer Phone (Optional)"
-								value={customerPhone}
-								onChange={(event) => setCustomerPhone(event.target.value)}
-								className={inputClassName}
-							/>
+			<div className="grid items-start gap-6 lg:grid-cols-[1.4fr_1fr]">
+				{/* ── Left: Form ── */}
+				<form className="flex flex-col gap-5" onSubmit={handleSubmit}>
+
+					{/* Customer details */}
+					<section className="rounded-2xl border border-white/10 bg-[#121527]/90 p-6 shadow-[0_16px_50px_rgba(0,0,0,0.25)] backdrop-blur-md">
+						<div className="mb-5 flex items-center gap-2.5">
+							<div className="flex h-8 w-8 items-center justify-center rounded-lg bg-indigo-500/15 text-indigo-400">
+								<Mic size={15} />
+							</div>
+							<h3 className="text-base font-bold text-white">Customer Details</h3>
+						</div>
+						<div className="grid gap-3.5">
+							{[
+								{ placeholder: 'Customer Name', value: customerName, onChange: setCustomerName, type: 'text' },
+								{ placeholder: 'Customer Email *', value: customerEmail, onChange: setCustomerEmail, type: 'email', required: true },
+								{ placeholder: 'Customer Phone (optional)', value: customerPhone, onChange: setCustomerPhone, type: 'tel' },
+							].map(({ placeholder, value, onChange, type, required }) => (
+								<input
+									key={placeholder}
+									type={type}
+									placeholder={placeholder}
+									value={value}
+									onChange={(e) => onChange(e.target.value)}
+									required={required}
+									className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none transition placeholder:text-slate-500 focus:border-indigo-500/60 focus:bg-white/8 focus:ring-2 focus:ring-indigo-500/15"
+								/>
+							))}
 						</div>
 					</section>
 
-					<section className={cardClassName}>
+					{/* Upload / text area */}
+					<section className="rounded-2xl border border-white/10 bg-[#121527]/90 p-6 shadow-[0_16px_50px_rgba(0,0,0,0.25)] backdrop-blur-md">
 						{inputType === 'audio' ? (
 							<>
-								<h3 className="mb-5 flex items-center text-lg font-bold text-white">
-									<FileAudio size={18} className="mr-2" />
-									Audio / Video Upload
-								</h3>
+								<div className="mb-5 flex items-center gap-2.5">
+									<div className="flex h-8 w-8 items-center justify-center rounded-lg bg-cyan-500/15 text-cyan-400">
+										<FileAudio size={15} />
+									</div>
+									<h3 className="text-base font-bold text-white">Audio / Video Upload</h3>
+								</div>
 
 								{!audioFile ? (
 									<div
 										role="button"
 										tabIndex={0}
 										onClick={() => fileInputRef.current?.click()}
-										onKeyDown={(event) => {
-											if (event.key === 'Enter' || event.key === ' ') {
-												event.preventDefault();
-												fileInputRef.current?.click();
-											}
+										onKeyDown={(e) => {
+											if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); fileInputRef.current?.click(); }
 										}}
-										onDragEnter={(event) => {
-											event.preventDefault();
-											setIsDragActive(true);
-										}}
-										onDragOver={(event) => {
-											event.preventDefault();
-											setIsDragActive(true);
-										}}
-										onDragLeave={(event) => {
-											event.preventDefault();
-											setIsDragActive(false);
-										}}
+										onDragEnter={(e) => { e.preventDefault(); setIsDragActive(true); }}
+										onDragOver={(e) => { e.preventDefault(); setIsDragActive(true); }}
+										onDragLeave={(e) => { e.preventDefault(); setIsDragActive(false); }}
 										onDrop={handleDrop}
-										className={`cursor-pointer rounded-2xl border-2 border-dashed px-4 py-12 text-center transition md:px-8 ${isDragActive ? 'scale-[1.01] border-[#6C63FF] bg-[rgba(108,99,255,0.08)]' : 'border-white/10 bg-[rgba(108,99,255,0.03)] hover:border-[#6C63FF] hover:bg-[rgba(108,99,255,0.08)]'}`}
+										className={`group relative cursor-pointer overflow-hidden rounded-2xl border-2 border-dashed px-6 py-14 text-center transition-all duration-200 ${
+											isDragActive
+												? 'border-indigo-500 bg-indigo-500/8 scale-[1.01]'
+												: 'border-white/12 bg-white/2 hover:border-indigo-500/60 hover:bg-indigo-500/5'
+										}`}
 									>
 										<input
 											ref={fileInputRef}
@@ -435,100 +411,123 @@ function AnalyzeCall({ token }) {
 											onChange={handleFileInputChange}
 											className="hidden"
 										/>
-
-										<div className="mx-auto mb-4 flex h-[72px] w-[72px] items-center justify-center rounded-full bg-[rgba(108,99,255,0.12)] text-[#6C63FF]">
-											<Upload size={36} />
+										{/* Glow background */}
+										<div className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-300 group-hover:opacity-100"
+											style={{ background: 'radial-gradient(ellipse at 50% 100%, rgba(108,99,255,0.08) 0%, transparent 70%)' }}
+										/>
+										<div className="relative">
+											<div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-indigo-500/12 text-indigo-400 shadow-[0_8px_24px_rgba(108,99,255,0.15)] transition-transform duration-200 group-hover:scale-105">
+												<Upload size={30} />
+											</div>
+											<h4 className="text-base font-bold text-white">Drag & drop your file here</h4>
+											<p className="mt-1 text-sm text-slate-400">or click to browse files</p>
+											<p className="mt-4 inline-flex items-center gap-1.5 rounded-full border border-white/8 bg-white/4 px-4 py-1.5 text-xs text-slate-400">
+												MP3 · WAV · M4A · OGG · WebM · FLAC · AAC · MP4 · Max 50MB
+											</p>
 										</div>
-										<h4 className="text-[1.05rem] font-semibold text-white">Drag & drop your file here</h4>
-										<p className="mt-1 text-sm text-slate-400">or click to browse</p>
-										<p className="mt-3 inline-block rounded-full bg-white/5 px-3 py-1.5 text-xs text-slate-400">
-											MP3 · WAV · M4A · OGG · WebM · FLAC · AAC · MP4 · Max 50MB
-										</p>
 									</div>
 								) : (
-									<div className="flex items-start gap-4 rounded-xl border border-white/10 bg-[rgba(108,99,255,0.08)] p-4">
-										<div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-[rgba(108,99,255,0.12)] text-[#6C63FF]">
-											<FileAudio size={28} />
+									<div className="group flex items-start gap-4 rounded-xl border border-indigo-500/25 bg-indigo-500/8 p-4 transition hover:border-indigo-500/40">
+										<div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-indigo-500/15 text-indigo-400">
+											<FileAudio size={26} />
 										</div>
 										<div className="min-w-0 flex-1">
 											<p className="truncate text-sm font-semibold text-white">{audioFile.name}</p>
-											<p className="mt-1 text-xs text-slate-400">
-												{formatFileSize(audioFile.size)} · {audioFile.type || 'audio/video file'}
+											<p className="mt-0.5 text-xs text-slate-400">
+												{formatFileSize(audioFile.size)} · {audioFile.type || 'audio/video'}
 											</p>
-											{audioFile.name.toLowerCase().endsWith('.mp4') ? (
-												<p className="mt-2 inline-block rounded-md bg-amber-200 px-2.5 py-1 text-xs text-amber-800">
-													Video file detected. Audio will be extracted automatically.
-												</p>
-											) : null}
+											{audioFile.name.toLowerCase().endsWith('.mp4') && (
+												<span className="mt-2 inline-block rounded-md border border-amber-400/25 bg-amber-400/10 px-2 py-0.5 text-xs text-amber-300">
+													Video file detected — audio will be extracted automatically
+												</span>
+											)}
 										</div>
 										<button
 											type="button"
-											className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-white/10 bg-white/5 text-slate-300 transition hover:bg-white/10 hover:text-white"
-											onClick={() => {
-												setAudioFile(null);
-												setFeedback(null);
-											}}
+											className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-white/10 bg-white/5 text-slate-400 transition hover:bg-rose-500/10 hover:text-rose-400"
+											onClick={() => { setAudioFile(null); setFeedback(null); }}
 										>
-											<X size={16} />
+											<X size={14} />
 										</button>
 									</div>
 								)}
 							</>
 						) : (
 							<>
-								<h3 className="mb-5 flex items-center text-lg font-bold text-white">
-									<FileText size={18} className="mr-2" />
-									Text Format Speech
-								</h3>
+								<div className="mb-5 flex items-center gap-2.5">
+									<div className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-500/15 text-emerald-400">
+										<FileText size={15} />
+									</div>
+									<h3 className="text-base font-bold text-white">Text Transcript</h3>
+								</div>
 								<textarea
-									className="min-h-[200px] w-full resize-y rounded-2xl border border-white/10 bg-white/5 p-4 text-sm text-white outline-none transition placeholder:text-slate-500 focus:border-indigo-400/50 focus:bg-white/8"
-									placeholder="Paste the transcription or speech text here..."
+									className="min-h-[220px] w-full resize-y rounded-xl border border-white/10 bg-white/5 p-4 text-sm text-white outline-none transition placeholder:text-slate-500 focus:border-indigo-500/60 focus:bg-white/8 focus:ring-2 focus:ring-indigo-500/15"
+									placeholder="Paste the transcription or call speech text here…"
 									value={textContent}
-									onChange={(event) => setTextContent(event.target.value)}
+									onChange={(e) => setTextContent(e.target.value)}
 								/>
 							</>
 						)}
 
+						{/* Submit button */}
 						<button
 							type="submit"
-							className="mt-6 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-[#6C63FF] px-5 py-3.5 text-sm font-semibold text-white shadow-[0_18px_40px_rgba(108,99,255,0.35)] transition hover:translate-y-[-1px] hover:bg-[#5d54f4] disabled:cursor-not-allowed disabled:opacity-50"
-							disabled={inputType === 'audio' ? !audioFile : !textContent.trim()}
+							disabled={!canSubmit}
+							className="group relative mt-5 inline-flex w-full items-center justify-center gap-2.5 overflow-hidden rounded-xl bg-gradient-to-r from-indigo-600 to-indigo-500 px-5 py-3.5 text-sm font-bold text-white shadow-[0_16px_40px_rgba(108,99,255,0.35)] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_20px_50px_rgba(108,99,255,0.45)] disabled:cursor-not-allowed disabled:opacity-50"
 						>
-							<Mic size={18} />
+							<div className="pointer-events-none absolute inset-0 translate-x-[-100%] bg-gradient-to-r from-transparent via-white/10 to-transparent transition-transform duration-500 group-hover:translate-x-[100%]" />
+							<Zap size={17} />
 							Run AI Analysis Pipeline
-							<ChevronRight size={16} />
+							<ChevronRight size={16} className="transition-transform group-hover:translate-x-0.5" />
 						</button>
 					</section>
 				</form>
 
-				<div className="flex flex-col gap-6">
-					<section className={cardClassName}>
-						<h3 className="mb-4 flex items-center text-lg font-bold text-white">
-							<Info size={16} className="mr-2" />
-							What AI Detects
-						</h3>
-						<div>
+				{/* ── Right: Info panels ── */}
+				<div className="flex flex-col gap-5">
+
+					{/* What AI detects */}
+					<section className="rounded-2xl border border-white/10 bg-[#121527]/90 p-5 shadow-[0_16px_50px_rgba(0,0,0,0.25)] backdrop-blur-md">
+						<div className="mb-4 flex items-center gap-2.5">
+							<div className="flex h-8 w-8 items-center justify-center rounded-lg bg-amber-500/15 text-amber-400">
+								<Cpu size={15} />
+							</div>
+							<h3 className="text-sm font-bold text-white">What AI Detects</h3>
+							<span className="ml-auto rounded-full border border-indigo-400/20 bg-indigo-500/10 px-2 py-0.5 text-[11px] font-semibold text-indigo-400">
+								{DETECTION_ITEMS.length}+ signals
+							</span>
+						</div>
+						<div className="grid grid-cols-1 gap-1.5 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
 							{DETECTION_ITEMS.map((item) => (
-								<div key={item.label} className="flex items-start gap-3 border-b border-white/8 py-2.5 last:border-b-0">
-									<span className="mt-0.5 shrink-0 text-xl">{item.icon}</span>
-									<div>
-										<p className="text-sm font-semibold text-white">{item.label}</p>
-										<p className="mt-0.5 text-xs text-slate-400">{item.description}</p>
+								<div
+									key={item.label}
+									className="flex items-center gap-2.5 rounded-xl border border-white/6 bg-white/3 px-3 py-2.5 transition hover:border-white/10 hover:bg-white/5"
+								>
+									<span className="text-base">{item.icon}</span>
+									<div className="min-w-0">
+										<p className="truncate text-xs font-semibold text-slate-200">{item.label}</p>
+										<p className="truncate text-[10px] text-slate-500">{item.description}</p>
 									</div>
 								</div>
 							))}
 						</div>
 					</section>
 
-					<section className={cardClassName}>
-						<h3 className="mb-4 text-lg font-bold text-white">⚡ AI Pipeline Steps</h3>
-						<div>
-							{PIPELINE_ITEMS.map((item, index) => (
-								<div key={item} className="flex items-center gap-3 py-2 text-sm text-slate-300">
-									<div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-white/10 bg-[rgba(108,99,255,0.15)] text-xs font-bold text-[#6C63FF]">
-										{index + 1}
+					{/* Pipeline steps */}
+					<section className="rounded-2xl border border-white/10 bg-[#121527]/90 p-5 shadow-[0_16px_50px_rgba(0,0,0,0.25)] backdrop-blur-md">
+						<div className="mb-4 flex items-center gap-2.5">
+							<div className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-500/15 text-emerald-400">
+								<Info size={15} />
+							</div>
+							<h3 className="text-sm font-bold text-white">AI Pipeline Steps</h3>
+						</div>
+						<div className="flex flex-col gap-0">
+							{PIPELINE_ITEMS.map((item, idx) => (
+								<div key={item} className="flex items-start gap-3 py-2">
+									<div className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-indigo-500/15 text-[10px] font-bold text-indigo-400">
+										{idx + 1}
 									</div>
-									<span>{item}</span>
+									<span className="flex-1 text-xs text-slate-400 leading-relaxed">{item}</span>
 								</div>
 							))}
 						</div>

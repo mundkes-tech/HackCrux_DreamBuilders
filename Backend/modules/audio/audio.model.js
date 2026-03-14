@@ -44,6 +44,11 @@ class CallModel {
     const collection = this.getCollection();
     return await collection.deleteOne({ callId });
   }
+
+  async deleteByUserId(userId) {
+    const collection = this.getCollection();
+    return await collection.deleteMany({ userId: userId.toString() });
+  }
 }
 
 export default new CallModel();

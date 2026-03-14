@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
+import { Link, useLocation } from "react-router-dom";
 import {
   Phone, Search, RefreshCw, Calendar,
   Smile, Meh, Frown
@@ -53,14 +53,16 @@ const UrgencyBadge = ({ urgency }) => {
 };
 
 const CallList = ({ token }) => {
+	const location = useLocation();
+	const initialQuery = useMemo(() => new URLSearchParams(location.search).get("q") || "", [location.search]);
   const [calls, setCalls]           = useState([]);
   const [filtered, setFiltered]     = useState([]);
   const [loading, setLoading]       = useState(true);
-  const [search, setSearch]         = useState("");
+  const [search, setSearch]         = useState(initialQuery);
   const [sentimentFilter, setSentiment] = useState("");
   const [callTypeFilter, setCallType] = useState("");
 
-  const fetchCalls = async () => {
+  const fetchCalls = useCallback(async () => {
     setLoading(true);
     try {
       const res = await dashboardApi.getCalls(token);
@@ -72,9 +74,15 @@ const CallList = ({ token }) => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [token]);
 
-  useEffect(() => { fetchCalls(); }, [token]);
+  useEffect(() => {
+	fetchCalls();
+  }, [fetchCalls]);
+
+  useEffect(() => {
+	setSearch(initialQuery);
+  }, [initialQuery]);
 
   // Client-side filter
   useEffect(() => {
@@ -103,8 +111,8 @@ const CallList = ({ token }) => {
     <div className="py-8 text-slate-200">
       <div className="mb-6 flex flex-wrap items-start justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-extrabold tracking-tight text-white md:text-4xl">All Analyzed Calls</h1>
-          <p className="mt-2 text-sm text-slate-400 md:text-base">Browse all AI-analyzed sales conversations</p>
+          <h1 className="text-3xl font-extrabold tracking-tight text-white md:text-4xl">Conversation Library</h1>
+          <p className="mt-2 text-sm text-slate-400 md:text-base">Review every analyzed customer conversation with sentiment, risk, and rep performance context.</p>
         </div>
         <Link
           to="/dashboard/analyze"
@@ -120,7 +128,7 @@ const CallList = ({ token }) => {
           <Search size={15} className="shrink-0" />
           <input
             type="text"
-            placeholder="Search by title, product or summary..."
+            placeholder="Search by account, product, summary, or call title..."
             className="h-10 w-full border-none bg-transparent text-sm text-slate-100 outline-none placeholder:text-slate-500"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
@@ -184,7 +192,7 @@ const CallList = ({ token }) => {
         </div>
       ) : (
         <div className="overflow-x-auto rounded-2xl border border-white/10 bg-[#121527eb]">
-          <div className="min-w-235">
+          <div className="min-w-[980px]">
             <div className="grid grid-cols-[2fr_1fr_1fr_0.8fr_0.7fr_0.7fr_0.8fr_0.8fr] items-center gap-3 border-b border-white/8 bg-white/3 px-4 py-3 text-[0.68rem] uppercase tracking-[0.08em] text-slate-400">
               <span>Product / Summary</span>
               <span>Sentiment</span>

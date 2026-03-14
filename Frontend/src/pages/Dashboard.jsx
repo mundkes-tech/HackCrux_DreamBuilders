@@ -22,6 +22,7 @@ import CallDetail from "./CallDetail";
 import Insights from "./Insights";
 import TopDeals from "./TopDeals";
 import HighRisk from "./HighRisk";
+import Profile from "./Profile";
 import { dashboardApi } from "../api/api";
 
 const defaultAnalytics = {
@@ -113,7 +114,8 @@ const ProgressRow = ({ label, count, maxCount, gradient }) => (
 	</div>
 );
 
-const Dashboard = ({ user, token, onLogout }) => {
+const Dashboard = ({ user: initialUser, token, onLogout, onUserUpdate }) => {
+	const [user, setUser] = useState(initialUser);
 	const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 	const [mobileOpen, setMobileOpen] = useState(false);
 	const [analytics, setAnalytics] = useState(defaultAnalytics);
@@ -147,7 +149,7 @@ const Dashboard = ({ user, token, onLogout }) => {
 				if (competitorsRes?.competitorInsights) {
 					setCompetitors(competitorsRes.competitorInsights);
 				}
-			} catch (_error) {
+			} catch {
 				setDashboardError("Could not connect to backend dashboard data.");
 			} finally {
 				setDashboardLoading(false);
@@ -196,6 +198,12 @@ const Dashboard = ({ user, token, onLogout }) => {
 	const isInsightsRoute = location.pathname === "/dashboard/insights";
 	const isTopDealsRoute = location.pathname === "/dashboard/top-deals";
 	const isHighRiskRoute = location.pathname === "/dashboard/high-risk";
+	const isProfileRoute = location.pathname === "/dashboard/profile";
+
+	const handleUserUpdate = (updatedUser) => {
+		setUser(updatedUser);
+		onUserUpdate?.(updatedUser);
+	};
 
 	return (
 		<div
@@ -210,6 +218,8 @@ const Dashboard = ({ user, token, onLogout }) => {
 			<Topbar
 				sidebarCollapsed={sidebarCollapsed}
 				onMobileMenu={() => setMobileOpen(true)}
+				user={user}
+				onLogout={handleLogout}
 			/>
 
 			{mobileOpen ? (
@@ -223,7 +233,7 @@ const Dashboard = ({ user, token, onLogout }) => {
 			<div className="pointer-events-none absolute right-[8%] top-0 h-80 w-80 rounded-full bg-amber-400/10 blur-[120px]" />
 
 			<div className={`relative z-10 pt-16 transition-[margin] duration-300 ${mainOffsetClass}`}>
-				<div className="mx-auto max-w-7xl px-6 py-10 lg:px-12">
+				<div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-12 lg:py-10">
 				{isAnalyzeRoute ? (
 					<AnalyzeCall token={token} />
 				) : isCallsRoute ? (
@@ -236,6 +246,8 @@ const Dashboard = ({ user, token, onLogout }) => {
 					<TopDeals token={token} />
 				) : isHighRiskRoute ? (
 					<HighRisk token={token} />
+				) : isProfileRoute ? (
+					<Profile user={user} token={token} onUserUpdate={handleUserUpdate} onLogout={handleLogout} />
 				) : (
 					<>
 				{dashboardLoading ? (
@@ -243,7 +255,7 @@ const Dashboard = ({ user, token, onLogout }) => {
 						<div className="mb-8 flex items-start justify-between gap-4">
 							<div>
 								<h1 className="text-3xl font-extrabold tracking-tight text-white md:text-4xl">
-									Intelligence Dashboard
+									Revenue Performance Command Center
 								</h1>
 							</div>
 						</div>
@@ -272,15 +284,15 @@ const Dashboard = ({ user, token, onLogout }) => {
 				<div className="mb-8 flex flex-wrap items-start justify-between gap-4">
 					<div>
 						<h1 className="text-3xl font-extrabold tracking-tight text-white md:text-4xl">
-							Intelligence Dashboard
+							Revenue Performance Command Center
 						</h1>
 						<p className="mt-2 max-w-2xl text-sm text-slate-400 md:text-base">
-							AI-powered sales conversation analytics with fast summaries, risk signals, and team-level visibility.
+							Monitor pipeline health, call quality, and opportunity momentum from one real-time workspace.
 						</p>
 						{user ? (
 							<p className="mt-3 text-sm text-slate-300">
 								Signed in as <span className="font-semibold text-white">{user.name}</span>
-								{user.companyName ? ` · ${user.companyName}` : ""}
+								{(user.company_name || user.companyName) ? ` · ${user.company_name || user.companyName}` : ""}
 							</p>
 						) : null}
 					</div>

@@ -37,9 +37,9 @@ const HighRisk = ({ token }) => {
     <div className="py-8 text-slate-200">
       <div className="mb-4">
         <div>
-          <h1 className="text-[1.9rem] font-extrabold text-white">⚠️ High Risk Deals</h1>
+        <h1 className="text-[1.9rem] font-extrabold text-white">At-Risk Opportunities</h1>
           <p className="mt-1.5 text-[0.95rem] text-slate-400">
-            Calls with low deal probability (below 40%) or negative customer sentiment
+        Calls flagged for low close probability or negative customer sentiment, requiring fast intervention.
           </p>
         </div>
       </div>

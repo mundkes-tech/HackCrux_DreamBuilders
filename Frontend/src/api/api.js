@@ -87,8 +87,8 @@ export const dashboardApi = {
     }
 
     const contentDisposition = response.headers.get('content-disposition') || '';
-    const fileNameMatch = contentDisposition.match(/filename\*?=(?:UTF-8''|\")?([^\";]+)/i);
-    const fileName = fileNameMatch ? decodeURIComponent(fileNameMatch[1].replace(/\"/g, '').trim()) : `call-report-${callId}.pdf`;
+    const fileNameMatch = contentDisposition.match(/filename\*?=(?:UTF-8''|")?([^";]+)/i);
+    const fileName = fileNameMatch ? decodeURIComponent(fileNameMatch[1].replace(/"/g, '').trim()) : `call-report-${callId}.pdf`;
     const blob = await response.blob();
 
     return { blob, fileName };

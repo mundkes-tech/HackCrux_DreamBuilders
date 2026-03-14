@@ -35,6 +35,6 @@ router.get("/product", authMiddleware, getProductAnalysis);
 router.get("/competitors", authMiddleware, getCompetitorInsights);
 
 // GET - Download a full analysis report as HTML
-router.get("/report/:callId", authMiddleware,downloadCallReportHandler);
+router.get("/report/:callId", authMiddleware, downloadCallReportHandler);
 
 export default router;
