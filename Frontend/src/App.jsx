@@ -72,16 +72,24 @@ function App() {
   }, []);
 
   const handleLogin = async ({ email, password, remember }) => {
-    const session = await loginUser({ email, password });
-    const nextAuth = { ...session, remember };
+    const response = await loginUser({ email, password });
+    const nextAuth = { 
+      token: response.data.token, 
+      user: response.data.user,
+      remember 
+    };
     persistAuth(nextAuth, remember);
     setAuth(nextAuth);
     return nextAuth;
   };
 
   const handleSignup = async ({ name, email, companyName, password }) => {
-    const session = await signupUser({ name, email, companyName, password });
-    const nextAuth = { ...session, remember: true };
+    const response = await signupUser({ name, email, companyName, password });
+    const nextAuth = { 
+      token: response.data.token, 
+      user: response.data.user,
+      remember: true 
+    };
     persistAuth(nextAuth, true);
     setAuth(nextAuth);
     return nextAuth;

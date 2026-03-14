@@ -29,7 +29,13 @@ export const signupUser = async ({ name, email, companyName, password }) => {
     headers: {
       "Content-Type": "application/json",
     },
-    body: JSON.stringify({ name, email, companyName, password }),
+    body: JSON.stringify({ 
+      name, 
+      email, 
+      company_name: companyName,
+      password,
+      confirmPassword: password 
+    }),
   });
 
   return parseJson(response);
