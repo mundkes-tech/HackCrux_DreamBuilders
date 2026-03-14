@@ -1,21 +1,29 @@
-require("dotenv").config();
+﻿import app from "./app.js";
+import { connectDB, disconnectDB } from "./config/db.js";
+import "dotenv/config.js";
 
-const app = require("./app");
-const connectDatabase = require("./config/db");
+const PORT = process.env.PORT || 5000;
 
-const PORT = Number(process.env.PORT) || 5000;
-
+// Connect to MongoDB and start server
 const startServer = async () => {
-	try {
-		await connectDatabase();
-
-		app.listen(PORT, () => {
-			console.log(`Server listening on port ${PORT}`);
-		});
-	} catch (error) {
-		console.error("Failed to start server", error);
-		process.exit(1);
-	}
+  try {
+    await connectDB();
+    
+    app.listen(PORT, () => {
+      console.log(`Server running on port ${PORT}`);
+      console.log(`Environment: ${process.env.NODE_ENV}`);
+    });
+  } catch (error) {
+    console.error("Failed to start server:", error);
+    process.exit(1);
+  }
 };
+
+// Handle graceful shutdown
+process.on("SIGINT", async () => {
+  console.log("\nShutting down gracefully...");
+  await disconnectDB();
+  process.exit(0);
+});
 
 startServer();

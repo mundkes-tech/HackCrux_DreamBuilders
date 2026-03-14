@@ -1,36 +1,65 @@
-const express = require("express");
-const cors = require("cors");
-
-const authRoutes = require("./routes/authRoutes");
+import express from "express";
+import cors from "cors";
+import "dotenv/config.js";
+import authRoutes from "./modules/auth/auth.routes.js";
+import audioRoutes from "./modules/audio/audio.routes.js";
+import transcriptionRoutes from "./modules/transcription/transcription.routes.js";
+import aiRoutes from "./modules/ai-analysis/ai.routes.js";
+import dashboardRoutes from "./modules/dashboard/dashboard.routes.js";
 
 const app = express();
 
-const allowedOrigin = process.env.CLIENT_URL || "http://localhost:5173";
-
+// Middleware
 app.use(
-	cors({
-		origin: allowedOrigin,
-		credentials: true,
-	})
+  cors({
+    origin: [
+      "http://localhost:5173",
+      "http://localhost:5174",
+      "http://localhost:3000",
+    ],
+    credentials: true,
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+  })
 );
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
-app.get("/api/health", (_req, res) => {
-	res.json({ status: "ok" });
-});
+// Serve uploaded audio files statically
+app.use("/uploads", express.static("uploads"));
 
+// Routes
 app.use("/api/auth", authRoutes);
+app.use("/api/audio", audioRoutes);
+app.use("/api/transcription", transcriptionRoutes);
+app.use("/api/ai", aiRoutes);
+app.use("/api/dashboard", dashboardRoutes);
 
-app.use((err, _req, res, _next) => {
-	console.error(err);
-
-	if (res.headersSent) {
-		return;
-	}
-
-	res.status(err.statusCode || 500).json({
-		message: err.message || "Internal server error",
-	});
+// Health check endpoint
+app.get("/api/health", (req, res) => {
+  res.status(200).json({
+    success: true,
+    message: "AI Sales Intelligence API running 🚀",
+    timestamp: new Date(),
+    backend: "aisi",
+  });
 });
 
-module.exports = app;
+// 404 handler
+app.use((req, res) => {
+  res.status(404).json({
+    message: "Route not found",
+    path: req.path,
+  });
+});
+
+// Error handler middleware
+app.use((err, req, res, next) => {
+  console.error("Error:", err);
+  res.status(500).json({
+    error: err.message,
+    message: "Internal server error",
+  });
+});
+
+export default app;

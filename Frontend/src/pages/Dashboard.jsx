@@ -25,89 +25,26 @@ import HighRisk from "./HighRisk";
 import { dashboardApi } from "../api/api";
 
 const defaultAnalytics = {
-	totalCalls: 128,
-	avgDealProbability: 67,
-	positiveCalls: 74,
-	neutralCalls: 31,
-	negativeCalls: 23,
-	avgRepRating: 8.4,
-	avgCustomerEngagement: 7.8,
+	totalCalls: 0,
+	avgDealProbability: 0,
+	positiveCalls: 0,
+	neutralCalls: 0,
+	negativeCalls: 0,
+	avgRepRating: 0,
+	avgCustomerEngagement: 0,
 	statusBreakdown: {
-		analyzed: 128,
-		transcribed: 15,
-		uploaded: 6,
+		analyzed: 0,
+		transcribed: 0,
+		uploaded: 0,
 	},
 };
 
 const defaultCompetitors = {
-	competitorsFrequency: [
-		{ name: "Clariq", count: 24 },
-		{ name: "SalesForge", count: 18 },
-		{ name: "RevPilot", count: 14 },
-		{ name: "InsightLoop", count: 11 },
-		{ name: "CallAxis", count: 8 },
-		{ name: "PitchFlow", count: 6 },
-	],
-	topAdvantages: [
-		{ advantage: "Lower implementation cost", count: 19 },
-		{ advantage: "Faster CRM integration", count: 16 },
-		{ advantage: "Stronger regional support", count: 13 },
-		{ advantage: "Shorter onboarding cycle", count: 11 },
-		{ advantage: "More flexible pricing", count: 9 },
-		{ advantage: "Native analytics export", count: 7 },
-	],
+	competitorsFrequency: [],
+	topAdvantages: [],
 };
 
-const defaultCalls = [
-	{
-		callId: "call-101",
-		productName: "Enterprise Suite",
-		summary: "Procurement team liked the reporting depth but raised concerns around onboarding speed and cost visibility.",
-		sentiment: "positive",
-		dealProbability: 82,
-		createdAt: "2026-03-12T09:30:00.000Z",
-	},
-	{
-		callId: "call-102",
-		productName: "Growth Plan",
-		summary: "Champion sees value, but finance wants a smaller pilot before approving broader rollout.",
-		sentiment: "neutral",
-		dealProbability: 58,
-		createdAt: "2026-03-11T14:15:00.000Z",
-	},
-	{
-		callId: "call-103",
-		productName: "AI Coaching Add-on",
-		summary: "Strong rep engagement and clear next steps after buyer mentioned immediate coaching gaps.",
-		sentiment: "positive",
-		dealProbability: 76,
-		createdAt: "2026-03-10T12:05:00.000Z",
-	},
-	{
-		callId: "call-104",
-		productName: "Team Analytics",
-		summary: "Prospect compared alternatives heavily and pushed back on migration effort and internal bandwidth.",
-		sentiment: "negative",
-		dealProbability: 34,
-		createdAt: "2026-03-09T16:45:00.000Z",
-	},
-	{
-		callId: "call-105",
-		productName: "SalesIQ Core",
-		summary: "Buyer responded well to live call scoring and requested a technical walkthrough with ops leadership.",
-		sentiment: "positive",
-		dealProbability: 71,
-		createdAt: "2026-03-08T10:20:00.000Z",
-	},
-	{
-		callId: "call-106",
-		productName: "Forecast Assistant",
-		summary: "Interest is present, but timing is uncertain until the team finishes current CRM cleanup work.",
-		sentiment: "neutral",
-		dealProbability: 49,
-		createdAt: "2026-03-07T11:10:00.000Z",
-	},
-];
+const defaultCalls = [];
 
 const sentimentMap = {
 	positive: {
@@ -176,7 +113,7 @@ const ProgressRow = ({ label, count, maxCount, gradient }) => (
 	</div>
 );
 
-const Dashboard = ({ user, onLogout }) => {
+const Dashboard = ({ user, token, onLogout }) => {
 	const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 	const [mobileOpen, setMobileOpen] = useState(false);
 	const [analytics, setAnalytics] = useState(defaultAnalytics);
@@ -194,9 +131,9 @@ const Dashboard = ({ user, onLogout }) => {
 
 			try {
 				const [analyticsRes, callsRes, competitorsRes] = await Promise.all([
-					dashboardApi.getAnalytics(),
-					dashboardApi.getCalls(),
-					dashboardApi.getCompetitors(),
+					dashboardApi.getAnalytics(token),
+					dashboardApi.getCalls(token),
+					dashboardApi.getCompetitors(token),
 				]);
 
 				if (analyticsRes?.analytics) {
@@ -211,14 +148,14 @@ const Dashboard = ({ user, onLogout }) => {
 					setCompetitors(competitorsRes.competitorInsights);
 				}
 			} catch (_error) {
-				setDashboardError("Could not connect to backend. Showing demo data.");
+				setDashboardError("Could not connect to backend dashboard data.");
 			} finally {
 				setDashboardLoading(false);
 			}
 		};
 
 		fetchDashboardData();
-	}, []);
+	}, [token]);
 
 	const sentimentData = [
 		{ name: "Positive", value: analytics.positiveCalls, color: "#00D4AA" },
@@ -288,13 +225,13 @@ const Dashboard = ({ user, onLogout }) => {
 			<div className={`relative z-10 pt-16 transition-[margin] duration-300 ${mainOffsetClass}`}>
 				<div className="mx-auto max-w-7xl px-6 py-10 lg:px-12">
 				{isAnalyzeRoute ? (
-					<AnalyzeCall />
+					<AnalyzeCall token={token} />
 				) : isCallsRoute ? (
-					<CallList />
+					<CallList token={token} />
 				) : isCallDetailRoute ? (
-					<CallDetail />
+					<CallDetail token={token} />
 				) : isInsightsRoute ? (
-					<Insights />
+					<Insights token={token} />
 				) : isTopDealsRoute ? (
 					<TopDeals />
 				) : isHighRiskRoute ? (
@@ -349,10 +286,6 @@ const Dashboard = ({ user, onLogout }) => {
 					</div>
 
 					<div className="flex items-center gap-3">
-						<div className="inline-flex items-center gap-2 rounded-full border border-emerald-400/20 bg-emerald-400/10 px-4 py-2 text-sm font-semibold text-emerald-300">
-							<Zap size={14} />
-							Live Demo Data
-						</div>
 						<button
 							type="button"
 							onClick={handleLogout}

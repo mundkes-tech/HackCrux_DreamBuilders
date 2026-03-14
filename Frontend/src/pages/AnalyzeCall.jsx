@@ -1,4 +1,5 @@
 import { useCallback, useRef, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
 	CheckCircle,
 	ChevronRight,
@@ -74,8 +75,6 @@ const MAX_FILE_SIZE = 50 * 1024 * 1024;
 const cardClassName = 'rounded-2xl border border-white/10 bg-[#121527]/90 p-5 shadow-[0_16px_50px_rgba(0,0,0,0.25)] backdrop-blur-md';
 const inputClassName = 'w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none transition placeholder:text-slate-500 focus:border-indigo-400/50 focus:bg-white/8';
 const tabBaseClassName = 'inline-flex items-center gap-2 rounded-xl px-5 py-2.5 text-sm font-semibold transition';
-const notConfiguredMessage = 'Analysis API is not configured in this workspace yet. The page UI is ready, but the upload and analysis requests still need to be wired to your backend.';
-
 const formatFileSize = (size) => `${(size / (1024 * 1024)).toFixed(2)} MB`;
 
 const isAcceptedFile = (file) => {
@@ -83,7 +82,7 @@ const isAcceptedFile = (file) => {
 	return ACCEPTED_EXTENSIONS.some((extension) => fileName.endsWith(extension));
 };
 
-function AnalyzeCall() {
+function AnalyzeCall({ token }) {
 	const fileInputRef = useRef(null);
 	const [inputType, setInputType] = useState('audio');
 	const [audioFile, setAudioFile] = useState(null);
@@ -96,6 +95,9 @@ function AnalyzeCall() {
 	const [uploadProgress, setUploadProgress] = useState(0);
 	const [isDragActive, setIsDragActive] = useState(false);
 	const [feedback, setFeedback] = useState(null);
+	const navigate = useNavigate();
+
+	const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api';
 
 	const setSelectedFile = useCallback((file) => {
 		if (!file) {
@@ -137,6 +139,76 @@ function AnalyzeCall() {
 		setSelectedFile(file);
 	}, [setSelectedFile]);
 
+	// Step 1: Upload Audio
+	const uploadAudio = async () => {
+		const formData = new FormData();
+		formData.append('audio', audioFile);
+		formData.append('customer_name', customerName || 'Unknown');
+		formData.append('customer_email', customerEmail);
+		formData.append('customer_phone', customerPhone || '');
+
+		const response = await fetch(`${API_BASE_URL}/audio/upload`, {
+			method: 'POST',
+			headers: { 'Authorization': `Bearer ${token}` },
+			body: formData
+		});
+
+		const data = await response.json();
+		if (!response.ok) throw new Error(data.message || 'Upload failed');
+		return data.callId;
+	};
+
+	// Step 2: Transcribe
+	const transcribeAudio = async (cId) => {
+		const response = await fetch(`${API_BASE_URL}/transcription/transcribe/${cId}`, {
+			method: 'POST',
+			headers: {
+				'Authorization': `Bearer ${token}`,
+				'Content-Type': 'application/json'
+			}
+		});
+
+		const data = await response.json();
+		if (!response.ok) throw new Error(data.message || 'Transcription failed');
+		return data.transcript;
+	};
+
+	// Step 3: Analyze
+	const analyzeCall = async (cId) => {
+		const response = await fetch(`${API_BASE_URL}/ai/analyze/${cId}`, {
+			method: 'POST',
+			headers: {
+				'Authorization': `Bearer ${token}`,
+				'Content-Type': 'application/json'
+			}
+		});
+
+		const data = await response.json();
+		if (!response.ok) throw new Error(data.message || 'Analysis failed');
+		return data.insights;
+	};
+
+	// Upload text
+	const uploadText = async () => {
+		const response = await fetch(`${API_BASE_URL}/audio/upload-text`, {
+			method: 'POST',
+			headers: {
+				'Authorization': `Bearer ${token}`,
+				'Content-Type': 'application/json'
+			},
+			body: JSON.stringify({
+				text: textContent,
+				customer_name: customerName || 'Unknown',
+				customer_email: customerEmail,
+				customer_phone: customerPhone || ''
+			})
+		});
+
+		const data = await response.json();
+		if (!response.ok) throw new Error(data.message || 'Upload failed');
+		return data.callId;
+	};
+
 	const handleSubmit = async (event) => {
 		event.preventDefault();
 		setFeedback(null);
@@ -151,12 +223,42 @@ function AnalyzeCall() {
 			return;
 		}
 
+		if (!customerEmail) {
+			setFeedback({ type: 'error', message: 'Please enter customer email.' });
+			return;
+		}
+
 		resetPipeline();
 		setStep('uploading');
-		setUploadProgress(inputType === 'text' ? 100 : 0);
 
 		try {
-			throw new Error(notConfiguredMessage);
+			// STEP 1: Upload
+			let cId;
+			if (inputType === 'audio') {
+				cId = await uploadAudio();
+			} else {
+				cId = await uploadText();
+			}
+			setCompletedSteps(['uploading']);
+
+			// Only transcribe if not text input
+			if (inputType === 'audio') {
+				setStep('transcribing');
+				await transcribeAudio(cId);
+				setCompletedSteps(['uploading', 'transcribing']);
+			}
+
+			// STEP 3: Analyze
+			setStep('analyzing');
+			await analyzeCall(cId);
+			setCompletedSteps(['uploading', 'transcribing', 'analyzing', 'done']);
+			setStep('done');
+
+			// Redirect to full call details page so all generated insights are visible.
+			setTimeout(() => {
+				navigate(`/dashboard/calls/${cId}`);
+			}, 600);
+
 		} catch (error) {
 			resetPipeline();
 			setFeedback({ type: 'error', message: error.message });

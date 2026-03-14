@@ -22,20 +22,20 @@ const Badge = ({ tone = "neutral", children }) => (
 
 const cardClassName = "rounded-2xl border border-white/12 bg-[#121527eb] p-4";
 
-const Insights = () => {
+const Insights = ({ token }) => {
   const [competitors, setCompetitors] = useState(null);
   const [calls, setCalls]             = useState([]);
   const [loading, setLoading]         = useState(true);
 
   useEffect(() => {
-    Promise.all([dashboardApi.getCompetitors(), dashboardApi.getCalls()])
+    Promise.all([dashboardApi.getCompetitors(token), dashboardApi.getCalls(token)])
       .then(([compRes, callsRes]) => {
         setCompetitors(compRes.competitorInsights);
         setCalls(callsRes.calls || []);
       })
       .catch(() => {})
       .finally(() => setLoading(false));
-  }, []);
+  }, [token]);
 
   if (loading) {
     return (
