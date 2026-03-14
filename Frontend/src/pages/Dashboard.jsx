@@ -1,4 +1,4 @@
-import { createElement, useState } from "react";
+import { createElement, useEffect, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
 	Activity,
@@ -22,8 +22,9 @@ import CallDetail from "./CallDetail";
 import Insights from "./Insights";
 import TopDeals from "./TopDeals";
 import HighRisk from "./HighRisk";
+import { dashboardApi } from "../api/api";
 
-const analytics = {
+const defaultAnalytics = {
 	totalCalls: 128,
 	avgDealProbability: 67,
 	positiveCalls: 74,
@@ -38,7 +39,7 @@ const analytics = {
 	},
 };
 
-const competitors = {
+const defaultCompetitors = {
 	competitorsFrequency: [
 		{ name: "Clariq", count: 24 },
 		{ name: "SalesForge", count: 18 },
@@ -57,7 +58,7 @@ const competitors = {
 	],
 };
 
-const calls = [
+const defaultCalls = [
 	{
 		callId: "call-101",
 		productName: "Enterprise Suite",
@@ -178,8 +179,47 @@ const ProgressRow = ({ label, count, maxCount, gradient }) => (
 const Dashboard = ({ user, onLogout }) => {
 	const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 	const [mobileOpen, setMobileOpen] = useState(false);
+	const [analytics, setAnalytics] = useState(defaultAnalytics);
+	const [calls, setCalls] = useState(defaultCalls);
+	const [competitors, setCompetitors] = useState(defaultCompetitors);
+	const [dashboardLoading, setDashboardLoading] = useState(true);
+	const [dashboardError, setDashboardError] = useState("");
 	const navigate = useNavigate();
 	const location = useLocation();
+
+	useEffect(() => {
+		const fetchDashboardData = async () => {
+			setDashboardLoading(true);
+			setDashboardError("");
+
+			try {
+				const [analyticsRes, callsRes, competitorsRes] = await Promise.all([
+					dashboardApi.getAnalytics(),
+					dashboardApi.getCalls(),
+					dashboardApi.getCompetitors(),
+				]);
+
+				if (analyticsRes?.analytics) {
+					setAnalytics(analyticsRes.analytics);
+				}
+
+				if (Array.isArray(callsRes?.calls)) {
+					setCalls(callsRes.calls);
+				}
+
+				if (competitorsRes?.competitorInsights) {
+					setCompetitors(competitorsRes.competitorInsights);
+				}
+			} catch (_error) {
+				setDashboardError("Could not connect to backend. Showing demo data.");
+			} finally {
+				setDashboardLoading(false);
+			}
+		};
+
+		fetchDashboardData();
+	}, []);
+
 	const sentimentData = [
 		{ name: "Positive", value: analytics.positiveCalls, color: "#00D4AA" },
 		{ name: "Negative", value: analytics.negativeCalls, color: "#FF6B6B" },
@@ -261,6 +301,37 @@ const Dashboard = ({ user, onLogout }) => {
 					<HighRisk />
 				) : (
 					<>
+				{dashboardLoading ? (
+					<>
+						<div className="mb-8 flex items-start justify-between gap-4">
+							<div>
+								<h1 className="text-3xl font-extrabold tracking-tight text-white md:text-4xl">
+									Intelligence Dashboard
+								</h1>
+							</div>
+						</div>
+
+						<div className="mb-8 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+							{[...Array(6)].map((_, i) => (
+								<div
+									key={i}
+									className="h-27 animate-pulse rounded-2xl border border-white/8 bg-white/4"
+								/>
+							))}
+						</div>
+
+						<div className="grid gap-6 lg:grid-cols-[1.5fr_1fr]">
+							<div className="h-72 animate-pulse rounded-2xl border border-white/8 bg-white/4" />
+							<div className="h-72 animate-pulse rounded-2xl border border-white/8 bg-white/4" />
+						</div>
+					</>
+				) : (
+					<>
+				{dashboardError ? (
+					<div className="mb-6 rounded-xl border border-amber-500/25 bg-amber-500/10 px-4 py-3 text-sm text-amber-200">
+						{dashboardError}
+					</div>
+				) : null}
 				<div className="mb-8 flex flex-wrap items-start justify-between gap-4">
 					<div>
 						<h1 className="text-3xl font-extrabold tracking-tight text-white md:text-4xl">
@@ -491,6 +562,8 @@ const Dashboard = ({ user, onLogout }) => {
 						</div>
 					</div>
 				</section>
+					</>
+				)}
 				</>
 				)}
 				</div>

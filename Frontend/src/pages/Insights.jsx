@@ -5,7 +5,22 @@ import {
 } from "recharts";
 import { dashboardApi } from "../api/api";
 import { BarChart3, TrendingDown, AlertOctagon, Package } from "lucide-react";
-import "./Insights.css";
+
+const badgeClassMap = {
+  positive: "border-emerald-500/35 bg-emerald-500/15 text-emerald-300",
+  negative: "border-rose-500/35 bg-rose-500/15 text-rose-300",
+  neutral: "border-amber-400/35 bg-amber-400/12 text-amber-300",
+};
+
+const Badge = ({ tone = "neutral", children }) => (
+  <span
+    className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-[0.75rem] font-semibold ${badgeClassMap[tone] || badgeClassMap.neutral}`}
+  >
+    {children}
+  </span>
+);
+
+const cardClassName = "rounded-2xl border border-white/12 bg-[#121527eb] p-4";
 
 const Insights = () => {
   const [competitors, setCompetitors] = useState(null);
@@ -24,10 +39,17 @@ const Insights = () => {
 
   if (loading) {
     return (
-      <div className="insights animate-fade-in">
-        <div className="page-header"><h1>Signal Insights</h1></div>
-        <div className="grid-2">
-          {[...Array(2)].map((_, i) => <div key={i} className="skeleton" style={{ height: 320 }} />)}
+      <div className="py-8 text-slate-200">
+        <div className="mb-4">
+          <h1 className="text-[1.9rem] font-extrabold text-white">Signal Insights</h1>
+        </div>
+        <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+          {[...Array(2)].map((_, i) => (
+            <div
+              key={i}
+              className="h-80 animate-pulse rounded-xl border border-white/8 bg-[linear-gradient(110deg,rgba(255,255,255,0.03),rgba(255,255,255,0.08),rgba(255,255,255,0.03))] bg-size-[200%_100%]"
+            />
+          ))}
         </div>
       </div>
     );
@@ -53,20 +75,22 @@ const Insights = () => {
   const advantages = competitors?.topAdvantages || [];
 
   return (
-    <div className="insights animate-fade-in">
-      <div className="page-header">
+    <div className="py-8 text-slate-200">
+      <div className="mb-4">
         <div>
-          <h1>Signal Insights</h1>
-          <p>Aggregated AI intelligence across all analyzed sales calls</p>
+          <h1 className="text-[1.9rem] font-extrabold text-white">Signal Insights</h1>
+          <p className="mt-1.5 text-[0.95rem] text-slate-400">
+            Aggregated AI intelligence across all analyzed sales calls
+          </p>
         </div>
       </div>
 
-      <div className="grid-2" style={{ marginBottom: "1.5rem" }}>
+      <div className="mb-6 grid grid-cols-1 gap-4 lg:grid-cols-2">
         {/* Buying Signals Chart */}
-        <div className="card">
-          <div className="card__header">
-            <h3>🟢 Top Buying Signals</h3>
-            <BarChart3 size={18} color="var(--color-positive)" />
+        <div className={cardClassName}>
+          <div className="mb-3 flex items-center justify-between gap-2">
+            <h3 className="text-base text-slate-50">🟢 Top Buying Signals</h3>
+            <BarChart3 size={18} className="text-emerald-400" />
           </div>
           {signalData.length > 0 ? (
             <ResponsiveContainer width="100%" height={280}>
@@ -83,15 +107,17 @@ const Insights = () => {
               </BarChart>
             </ResponsiveContainer>
           ) : (
-            <div className="insights__empty">No buying signals detected yet.</div>
+            <div className="rounded-xl border border-dashed border-white/14 p-8 text-center text-[0.875rem] text-slate-400">
+              No buying signals detected yet.
+            </div>
           )}
         </div>
 
         {/* Objections Chart */}
-        <div className="card">
-          <div className="card__header">
-            <h3>🔴 Top Customer Objections</h3>
-            <TrendingDown size={18} color="var(--color-negative)" />
+        <div className={cardClassName}>
+          <div className="mb-3 flex items-center justify-between gap-2">
+            <h3 className="text-base text-slate-50">🔴 Top Customer Objections</h3>
+            <TrendingDown size={18} className="text-rose-400" />
           </div>
           {objectionData.length > 0 ? (
             <ResponsiveContainer width="100%" height={280}>
@@ -108,32 +134,34 @@ const Insights = () => {
               </BarChart>
             </ResponsiveContainer>
           ) : (
-            <div className="insights__empty">No objections detected yet.</div>
+            <div className="rounded-xl border border-dashed border-white/14 p-8 text-center text-[0.875rem] text-slate-400">
+              No objections detected yet.
+            </div>
           )}
         </div>
       </div>
 
       {/* Improvements Needed */}
       {improvementData.length > 0 && (
-        <div className="card" style={{ marginBottom: "1.5rem" }}>
-          <div className="card__header">
-            <h3>🔧 Product Improvements Needed</h3>
-            <Package size={18} color="var(--brand-primary)" />
+        <div className={`${cardClassName} mb-6`}>
+          <div className="mb-3 flex items-center justify-between gap-2">
+            <h3 className="text-base text-slate-50">🔧 Product Improvements Needed</h3>
+            <Package size={18} className="text-indigo-400" />
           </div>
-          <div className="insights__competitors">
+          <div className="flex flex-col gap-3">
             {improvementData.map((item, i) => (
-              <div key={i} className="insights__competitor-item">
-                <span className="insights__competitor-name">{item._id}</span>
-                <div className="dashboard__signal-bar" style={{ flex: 1, maxWidth: 250 }}>
+              <div key={i} className="flex items-center gap-3">
+                <span className="w-45 text-[0.85rem] text-slate-300 lg:w-35">{item._id}</span>
+                <div className="h-2 w-full max-w-62.5 flex-1 overflow-hidden rounded-full bg-white/12">
                   <div
-                    className="dashboard__signal-fill"
+                    className="h-full rounded-full"
                     style={{
                       width: `${(item.count / improvementData[0].count) * 100}%`,
-                      background: "var(--grad-brand)",
+                      background: "linear-gradient(135deg,#6C63FF,#00D4AA)",
                     }}
                   />
                 </div>
-                <span className="badge badge-neutral">{item.count}×</span>
+                <Badge tone="neutral">{item.count}x</Badge>
               </div>
             ))}
           </div>
@@ -141,54 +169,56 @@ const Insights = () => {
       )}
 
       {/* Competitor Mentions */}
-      <div className="card" style={{ marginBottom: "1.5rem" }}>
-        <div className="card__header">
-          <h3>🏢 Competitor Mentions</h3>
-          <AlertOctagon size={18} color="var(--color-neutral)" />
+      <div className={`${cardClassName} mb-6`}>
+        <div className="mb-3 flex items-center justify-between gap-2">
+          <h3 className="text-base text-slate-50">🏢 Competitor Mentions</h3>
+          <AlertOctagon size={18} className="text-amber-300" />
         </div>
         {comps.length > 0 ? (
-          <div className="insights__competitors">
+          <div className="flex flex-col gap-3">
             {comps.map((c, i) => (
-              <div key={i} className="insights__competitor-item">
-                <span className="insights__competitor-name">{c.name}</span>
-                <div className="dashboard__signal-bar" style={{ flex: 1, maxWidth: 250 }}>
+              <div key={i} className="flex items-center gap-3">
+                <span className="w-45 text-[0.85rem] text-slate-300 lg:w-35">{c.name}</span>
+                <div className="h-2 w-full max-w-62.5 flex-1 overflow-hidden rounded-full bg-white/12">
                   <div
-                    className="dashboard__signal-fill"
+                    className="h-full rounded-full"
                     style={{
                       width: `${(c.count / comps[0].count) * 100}%`,
-                      background: "var(--grad-gold)",
+                      background: "linear-gradient(135deg,#FFB347,#FF8C42)",
                     }}
                   />
                 </div>
-                <span className="badge badge-neutral">{c.count} mentions</span>
+                <Badge tone="neutral">{c.count} mentions</Badge>
               </div>
             ))}
           </div>
         ) : (
-          <div className="insights__empty">No competitor mentions detected yet.</div>
+          <div className="rounded-xl border border-dashed border-white/14 p-8 text-center text-[0.875rem] text-slate-400">
+            No competitor mentions detected yet.
+          </div>
         )}
       </div>
 
       {/* Competitor Advantages */}
       {advantages.length > 0 && (
-        <div className="card">
-          <div className="card__header">
-            <h3>⚡ Why Customers Prefer Competitors</h3>
+        <div className={cardClassName}>
+          <div className="mb-3 flex items-center justify-between gap-2">
+            <h3 className="text-base text-slate-50">⚡ Why Customers Prefer Competitors</h3>
           </div>
-          <div className="insights__competitors">
+          <div className="flex flex-col gap-3">
             {advantages.map((a, i) => (
-              <div key={i} className="insights__competitor-item">
-                <span className="insights__competitor-name">{a.advantage}</span>
-                <div className="dashboard__signal-bar" style={{ flex: 1, maxWidth: 250 }}>
+              <div key={i} className="flex items-center gap-3">
+                <span className="w-45 text-[0.85rem] text-slate-300 lg:w-35">{a.advantage}</span>
+                <div className="h-2 w-full max-w-62.5 flex-1 overflow-hidden rounded-full bg-white/12">
                   <div
-                    className="dashboard__signal-fill"
+                    className="h-full rounded-full"
                     style={{
                       width: `${(a.count / advantages[0].count) * 100}%`,
-                      background: "var(--grad-danger)",
+                      background: "linear-gradient(135deg,#FB7185,#EF4444)",
                     }}
                   />
                 </div>
-                <span className="badge badge-negative">{a.count}×</span>
+                <Badge tone="negative">{a.count}x</Badge>
               </div>
             ))}
           </div>

@@ -2,7 +2,17 @@ import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { dashboardApi } from "../api/api";
 import { AlertTriangle, ArrowUpRight, Shield } from "lucide-react";
-import "./Insights.css";
+
+const sentimentClass = (sentiment) => {
+  const normalized = (sentiment || "").toLowerCase();
+  if (normalized === "negative") {
+    return "border-rose-500/35 bg-rose-500/15 text-rose-300";
+  }
+  if (normalized === "positive") {
+    return "border-emerald-500/35 bg-emerald-500/15 text-emerald-300";
+  }
+  return "border-amber-400/35 bg-amber-400/12 text-amber-300";
+};
 
 const HighRisk = () => {
   const [calls, setCalls] = useState([]);
@@ -24,84 +34,101 @@ const HighRisk = () => {
   }, []);
 
   return (
-    <div style={{ padding: "2rem 0" }} className="animate-fade-in">
-      <div className="page-header">
+    <div className="py-8 text-slate-200">
+      <div className="mb-4">
         <div>
-          <h1>⚠️ High Risk Deals</h1>
-          <p>Calls with low deal probability (below 40%) or negative customer sentiment</p>
+          <h1 className="text-[1.9rem] font-extrabold text-white">⚠️ High Risk Deals</h1>
+          <p className="mt-1.5 text-[0.95rem] text-slate-400">
+            Calls with low deal probability (below 40%) or negative customer sentiment
+          </p>
         </div>
       </div>
 
       {loading ? (
-        <div className="grid-2">
-          {[...Array(4)].map((_, i) => <div key={i} className="skeleton" style={{ height: 160 }} />)}
+        <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+          {[...Array(4)].map((_, i) => (
+            <div
+              key={i}
+              className="h-40 animate-pulse rounded-xl border border-white/8 bg-[linear-gradient(110deg,rgba(255,255,255,0.03),rgba(255,255,255,0.08),rgba(255,255,255,0.03))] bg-size-[200%_100%]"
+            />
+          ))}
         </div>
       ) : calls.length === 0 ? (
-        <div style={{ textAlign: "center", padding: "4rem", color: "var(--text-muted)" }}>
-          <Shield size={48} color="var(--color-positive)" style={{ marginBottom: "1rem" }} />
-          <h3 style={{ color: "var(--color-positive)" }}>No high-risk deals!</h3>
-          <p style={{ marginTop: "0.5rem" }}>All analyzed calls look healthy. 🎉</p>
+        <div className="grid place-items-center gap-2 rounded-2xl border border-dashed border-white/15 px-4 py-16 text-center text-slate-400">
+          <Shield size={48} className="mb-2 text-emerald-400" />
+          <h3 className="text-lg font-semibold text-emerald-300">No high-risk deals!</h3>
+          <p className="mt-1">All analyzed calls look healthy. 🎉</p>
         </div>
       ) : (
-        <div className="grid-2">
+        <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
           {calls.map((call) => {
             const ins  = call.aiInsights || {};
             const prob = call.dealProbability ?? 0;
             const sentiment = call.sentiment || "";
             const riskColor = prob < 20 || sentiment === "negative"
-              ? "var(--risk-critical)"
-              : "var(--risk-high)";
+              ? "#ef4444"
+              : "#f97316";
             const riskLabel = prob < 20 || sentiment === "negative" ? "Critical" : "High";
 
             return (
               <div
                 key={call.callId}
-                className="card"
-                style={{ borderColor: riskColor, borderWidth: 1 }}
+                className="rounded-2xl border bg-[#121527eb] p-4"
+                style={{ borderColor: `${riskColor}99` }}
               >
-                <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: "1rem" }}>
-                  <div style={{ flex: 1 }}>
-                    <div style={{ display: "flex", gap: "0.4rem", marginBottom: "0.4rem" }}>
-                      <span style={{ background: `${riskColor}22`, color: riskColor, padding: "0.2rem 0.6rem", borderRadius: "var(--radius-full)", fontSize: "0.75rem", fontWeight: 700, border: `1px solid ${riskColor}44` }}>
-                        <AlertTriangle size={11} style={{ display: "inline", marginRight: "0.25rem" }} />
+                <div className="flex items-start justify-between gap-4">
+                  <div className="flex-1">
+                    <div className="mb-1.5 flex flex-wrap gap-1.5">
+                      <span
+                        className="inline-flex items-center rounded-full border px-2.5 py-1 text-[0.75rem] font-bold"
+                        style={{ background: `${riskColor}22`, color: riskColor, borderColor: `${riskColor}44` }}
+                      >
+                        <AlertTriangle size={11} className="mr-1" />
                         {riskLabel} Risk
                       </span>
-                      <span className={`badge ${sentiment === "negative" ? "badge-negative" : sentiment === "positive" ? "badge-positive" : "badge-neutral"}`}>
+                      <span className={`inline-flex items-center rounded-full border px-2.5 py-1 text-[0.75rem] font-semibold capitalize ${sentimentClass(sentiment)}`}>
                         {sentiment || "unknown"}
                       </span>
                     </div>
-                    <Link to={`/dashboard/calls/${call.callId}`} style={{
-                      fontSize: "0.95rem", fontWeight: 700, color: "var(--text-primary)",
-                      textDecoration: "none", display: "flex", alignItems: "center", gap: "0.3rem"
-                    }}>
+
+                    <Link
+                      to={`/dashboard/calls/${call.callId}`}
+                      className="inline-flex items-center gap-1.5 text-[0.95rem] font-bold text-slate-50 transition hover:text-indigo-300"
+                    >
                       {call.callTitle || call.productName || call.product_name || "Sales Call"} <ArrowUpRight size={13} />
                     </Link>
-                    <p style={{ fontSize: "0.78rem", color: "var(--text-muted)", marginTop: "0.15rem" }}>
+
+                    <p className="mt-0.5 text-[0.78rem] text-slate-500">
                       {call.summary?.substring(0, 70)}{call.summary?.length > 70 ? "..." : ""}
                     </p>
-                    <p style={{ fontSize: "0.72rem", color: "var(--color-info)", marginTop: "0.2rem", textTransform: "capitalize" }}>
+
+                    <p className="mt-1 text-[0.72rem] capitalize text-sky-400">
                       Type: {call.callType || "other"}
                     </p>
                   </div>
-                  <div style={{ textAlign: "right", flexShrink: 0 }}>
-                    <div style={{ fontSize: "1.8rem", fontWeight: 900, color: riskColor, fontFamily: "'Space Grotesk', sans-serif" }}>
+
+                  <div className="shrink-0 text-right">
+                    <div className="text-[1.8rem] font-black leading-none" style={{ color: riskColor }}>
                       {prob}%
                     </div>
-                    <div style={{ fontSize: "0.72rem", color: "var(--text-muted)" }}>Probability</div>
+                    <div className="text-[0.72rem] text-slate-500">Probability</div>
                   </div>
                 </div>
 
-                <div className="progress-bar" style={{ marginTop: "0.75rem" }}>
-                  <div className="progress-fill" style={{ width: `${prob}%`, background: riskColor }} />
+                <div className="mt-3 h-2 w-full overflow-hidden rounded-full bg-white/12">
+                  <div className="h-full rounded-full" style={{ width: `${prob}%`, background: riskColor }} />
                 </div>
 
                 {ins.objections?.length > 0 && (
-                  <div style={{ marginTop: "0.75rem" }}>
-                    <p style={{ fontSize: "0.75rem", color: "var(--text-muted)", marginBottom: "0.3rem", fontWeight: 600 }}>
+                  <div className="mt-3">
+                    <p className="mb-1 text-[0.75rem] font-semibold text-slate-500">
                       Objections:
                     </p>
                     {ins.objections.slice(0, 2).map((o, i) => (
-                      <span key={i} className="badge badge-negative" style={{ marginRight: "0.35rem", marginTop: "0.25rem", fontSize: "0.73rem" }}>
+                      <span
+                        key={i}
+                        className="mr-1.5 mt-1 inline-flex items-center rounded-full border border-rose-500/35 bg-rose-500/15 px-2.5 py-1 text-[0.73rem] font-semibold text-rose-300"
+                      >
                         ⚠️ {o.substring(0, 45)}{o.length > 45 ? "..." : ""}
                       </span>
                     ))}
@@ -109,12 +136,12 @@ const HighRisk = () => {
                 )}
 
                 {(ins.followUpRecommendation || call.aiInsights?.followUpRecommendation) && (
-                  <p style={{ marginTop: "0.75rem", fontSize: "0.8rem", color: "var(--color-info)", fontStyle: "italic" }}>
+                  <p className="mt-3 text-[0.8rem] italic text-sky-400">
                     💡 {ins.followUpRecommendation || call.aiInsights?.followUpRecommendation}
                   </p>
                 )}
 
-                <p style={{ marginTop: "0.5rem", fontSize: "0.75rem", color: "var(--text-muted)" }}>
+                <p className="mt-2 text-[0.75rem] text-slate-500">
                   {call.createdAt ? new Date(call.createdAt).toLocaleDateString() : "—"}
                 </p>
               </div>
