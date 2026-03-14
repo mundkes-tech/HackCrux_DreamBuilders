@@ -5,6 +5,8 @@ import { CircleCheckBig } from "lucide-react";
 const Login = ({ onLogin, isAuthenticated }) => {
   const navigate = useNavigate();
   const [form, setForm] = useState({ email: "", password: "", remember: true });
+  const [error, setError] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -17,16 +19,26 @@ const Login = ({ onLogin, isAuthenticated }) => {
     setForm((prev) => ({ ...prev, [field]: value }));
   };
 
-  const handleSubmit = (event) => {
+  const handleSubmit = async (event) => {
     event.preventDefault();
-    if (onLogin) {
-      onLogin({
-        name: "SalesIQ User",
+    setError("");
+    setIsSubmitting(true);
+
+    try {
+      if (onLogin) {
+        await onLogin({
         email: form.email,
+        password: form.password,
         remember: form.remember,
-      });
+        });
+      }
+
+      navigate("/app", { replace: true });
+    } catch (submitError) {
+      setError(submitError.message || "Unable to login right now.");
+    } finally {
+      setIsSubmitting(false);
     }
-    navigate("/app", { replace: true });
   };
 
   return (
@@ -100,8 +112,10 @@ const Login = ({ onLogin, isAuthenticated }) => {
               <a href="#" className="text-indigo-400 text-[0.85rem] font-semibold hover:text-indigo-300 transition-colors">Forgot password?</a>
             </div>
 
-            <button className="mt-1.5 w-full bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2.5 px-4 rounded-lg transition-colors" type="submit">
-              Login to Dashboard
+            {error ? <p className="text-[0.84rem] text-red-400">{error}</p> : null}
+
+            <button className="mt-1.5 w-full rounded-lg bg-indigo-600 px-4 py-2.5 font-medium text-white transition-colors hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-60" type="submit" disabled={isSubmitting}>
+              {isSubmitting ? "Signing in..." : "Login to Dashboard"}
             </button>
 
             <div className="flex items-center gap-3 my-3 text-gray-500 text-[0.8rem] before:content-[''] before:flex-1 before:h-[1px] before:bg-gray-800 after:content-[''] after:flex-1 after:h-[1px] after:bg-gray-800">
