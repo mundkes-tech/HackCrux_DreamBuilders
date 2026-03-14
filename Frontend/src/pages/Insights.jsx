@@ -32,8 +32,8 @@ const badgeClassMap = {
   negative: "border-rose-500/35 bg-rose-500/12 text-rose-300",
   neutral: "border-amber-400/35 bg-amber-400/12 text-amber-300",
 };
-const Badge = ({ tone = "neutral", children }) => (
-  <span className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-[0.72rem] font-semibold ${badgeClassMap[tone] || badgeClassMap.neutral}`}>
+const Badge = ({ tone = "neutral", className = "", children }) => (
+  <span className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-[0.72rem] font-semibold ${badgeClassMap[tone] || badgeClassMap.neutral} ${className}`}>
     {children}
   </span>
 );
@@ -84,6 +84,12 @@ const Skeleton = ({ className = "" }) => (
   <div className={`animate-pulse rounded-xl border border-white/6 bg-white/3 ${className}`} />
 );
 
+const truncateLabel = (value, max = 34) => {
+  if (!value) return "Unknown";
+  if (value.length <= max) return value;
+  return `${value.slice(0, max - 1)}…`;
+};
+
 const Insights = ({ token }) => {
   const [competitors, setCompetitors] = useState(null);
   const [calls, setCalls]             = useState([]);
@@ -131,6 +137,14 @@ const Insights = ({ token }) => {
   const objectionData   = Object.entries(objectionMap).sort((a, b) => b[1] - a[1]).map(([_id, count]) => ({ _id, count }));
   const signalData      = Object.entries(signalMap).sort((a, b) => b[1] - a[1]).map(([_id, count]) => ({ _id, count }));
   const improvementData = Object.entries(improvementMap).sort((a, b) => b[1] - a[1]).map(([_id, count]) => ({ _id, count }));
+  const objectionChartData = objectionData.slice(0, 8).map((item) => ({
+    ...item,
+    label: truncateLabel(item._id),
+  }));
+  const signalChartData = signalData.slice(0, 8).map((item) => ({
+    ...item,
+    label: truncateLabel(item._id),
+  }));
 
   const comps      = competitors?.competitorsFrequency || [];
   const advantages = competitors?.topAdvantages || [];
@@ -181,25 +195,27 @@ const Insights = ({ token }) => {
 
         {/* Buying Signals */}
         <Card>
-          <div className="mb-4 flex items-center gap-2.5">
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-500/15 text-emerald-400">
-              <TrendingUp size={17} />
-            </div>
-            <div>
-              <h3 className="text-sm font-bold text-white">Top Buying Signals</h3>
-              <p className="text-xs text-slate-500">Positive purchase intent indicators</p>
+          <div className="mb-4 flex items-start justify-between gap-3">
+            <div className="flex items-center gap-2.5">
+              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-500/15 text-emerald-400">
+                <TrendingUp size={17} />
+              </div>
+              <div>
+                <h3 className="text-sm font-bold text-white">Top Buying Signals</h3>
+                <p className="text-xs text-slate-500">Positive purchase intent indicators</p>
+              </div>
             </div>
             <Badge tone="positive" className="ml-auto">{signalData.length} types</Badge>
           </div>
-          {signalData.length > 0 ? (
-            <ResponsiveContainer width="100%" height={signalData.length > 5 ? 320 : 220}>
-              <BarChart data={signalData} layout="vertical" margin={{ left: 8, right: 8 }}>
+          {signalChartData.length > 0 ? (
+            <ResponsiveContainer width="100%" height={signalChartData.length > 5 ? 320 : 240}>
+              <BarChart data={signalChartData} layout="vertical" margin={{ left: 12, right: 8 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" horizontal={false} />
                 <XAxis type="number" tick={{ fontSize: 11, fill: "#64748b" }} allowDecimals={false} axisLine={false} tickLine={false} />
-                <YAxis dataKey="_id" type="category" tick={{ fontSize: 10, fill: "#94a3b8" }} width={150} axisLine={false} tickLine={false} />
+                <YAxis dataKey="label" type="category" tick={{ fontSize: 11, fill: "#94a3b8" }} width={190} axisLine={false} tickLine={false} interval={0} />
                 <Tooltip {...chartTooltipStyle} content={<ChartTooltip />} />
                 <Bar dataKey="count" radius={[0, 6, 6, 0]} maxBarSize={22}>
-                  {signalData.map((_, i) => (
+                  {signalChartData.map((_, i) => (
                     <Cell key={i} fill={`hsl(${160 - i * 12}, 65%, ${52 - i * 1.5}%)`} />
                   ))}
                 </Bar>
@@ -210,25 +226,27 @@ const Insights = ({ token }) => {
 
         {/* Objections */}
         <Card>
-          <div className="mb-4 flex items-center gap-2.5">
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-rose-500/15 text-rose-400">
-              <TrendingDown size={17} />
-            </div>
-            <div>
-              <h3 className="text-sm font-bold text-white">Customer Objections</h3>
-              <p className="text-xs text-slate-500">Pricing, timing & feature concerns</p>
+          <div className="mb-4 flex items-start justify-between gap-3">
+            <div className="flex items-center gap-2.5">
+              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-rose-500/15 text-rose-400">
+                <TrendingDown size={17} />
+              </div>
+              <div>
+                <h3 className="text-sm font-bold text-white">Customer Objections</h3>
+                <p className="text-xs text-slate-500">Pricing, timing & feature concerns</p>
+              </div>
             </div>
             <Badge tone="negative" className="ml-auto">{objectionData.length} types</Badge>
           </div>
-          {objectionData.length > 0 ? (
-            <ResponsiveContainer width="100%" height={objectionData.length > 5 ? 320 : 220}>
-              <BarChart data={objectionData} layout="vertical" margin={{ left: 8, right: 8 }}>
+          {objectionChartData.length > 0 ? (
+            <ResponsiveContainer width="100%" height={objectionChartData.length > 5 ? 320 : 240}>
+              <BarChart data={objectionChartData} layout="vertical" margin={{ left: 12, right: 8 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" horizontal={false} />
                 <XAxis type="number" tick={{ fontSize: 11, fill: "#64748b" }} allowDecimals={false} axisLine={false} tickLine={false} />
-                <YAxis dataKey="_id" type="category" tick={{ fontSize: 10, fill: "#94a3b8" }} width={150} axisLine={false} tickLine={false} />
+                <YAxis dataKey="label" type="category" tick={{ fontSize: 11, fill: "#94a3b8" }} width={190} axisLine={false} tickLine={false} interval={0} />
                 <Tooltip {...chartTooltipStyle} content={<ChartTooltip />} />
                 <Bar dataKey="count" radius={[0, 6, 6, 0]} maxBarSize={22}>
-                  {objectionData.map((_, i) => (
+                  {objectionChartData.map((_, i) => (
                     <Cell key={i} fill={`hsl(${5 + i * 8}, 70%, ${55 - i * 2}%)`} />
                   ))}
                 </Bar>

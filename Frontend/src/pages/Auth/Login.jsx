@@ -117,14 +117,6 @@ const Login = ({ onLogin, isAuthenticated }) => {
             <button className="mt-1.5 w-full rounded-lg bg-indigo-600 px-4 py-2.5 font-medium text-white transition-colors hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-60" type="submit" disabled={isSubmitting}>
               {isSubmitting ? "Signing in..." : "Login to Dashboard"}
             </button>
-
-            <div className="flex items-center gap-3 my-3 text-gray-500 text-[0.8rem] before:content-[''] before:flex-1 before:h-[1px] before:bg-gray-800 after:content-[''] after:flex-1 after:h-[1px] after:bg-gray-800">
-              or
-            </div>
-            
-            <button className="w-full bg-white/5 hover:bg-white/10 text-white font-medium py-2.5 px-4 rounded-lg border border-gray-700 transition-colors" type="button">
-              Continue with Google
-            </button>
           </form>
 
           <p className="mt-4 text-gray-400 text-[0.86rem]">
