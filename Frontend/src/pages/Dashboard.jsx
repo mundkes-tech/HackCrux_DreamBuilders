@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { createElement, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
 	Activity,
@@ -17,6 +17,11 @@ import {
 import Sidebar from "../components/Sidebar";
 import Topbar from "../components/Topbar";
 import AnalyzeCall from "./AnalyzeCall";
+import CallList from "./CallList";
+import CallDetail from "./CallDetail";
+import Insights from "./Insights";
+import TopDeals from "./TopDeals";
+import HighRisk from "./HighRisk";
 
 const analytics = {
 	totalCalls: 128,
@@ -130,7 +135,7 @@ const StatCard = ({ icon: Icon, label, value, sub, gradient }) => (
 			className="mb-4 flex h-12 w-12 items-center justify-center rounded-xl text-white shadow-lg"
 			style={{ background: gradient }}
 		>
-			<Icon size={22} />
+			{createElement(Icon, { size: 22 })}
 		</div>
 		<p className="text-sm font-medium text-slate-400">{label}</p>
 		<h2 className="mt-1 text-3xl font-extrabold text-white">{value}</h2>
@@ -208,7 +213,12 @@ const Dashboard = ({ user, onLogout }) => {
 	};
 
 	const mainOffsetClass = sidebarCollapsed ? "md:ml-[68px]" : "md:ml-[240px]";
-	const isAnalyzeRoute = location.pathname === "/app/analyze";
+	const isAnalyzeRoute = location.pathname === "/dashboard/analyze";
+	const isCallsRoute = location.pathname === "/dashboard/calls";
+	const isCallDetailRoute = location.pathname.startsWith("/dashboard/calls/");
+	const isInsightsRoute = location.pathname === "/dashboard/insights";
+	const isTopDealsRoute = location.pathname === "/dashboard/top-deals";
+	const isHighRiskRoute = location.pathname === "/dashboard/high-risk";
 
 	return (
 		<div
@@ -239,6 +249,16 @@ const Dashboard = ({ user, onLogout }) => {
 				<div className="mx-auto max-w-7xl px-6 py-10 lg:px-12">
 				{isAnalyzeRoute ? (
 					<AnalyzeCall />
+				) : isCallsRoute ? (
+					<CallList />
+				) : isCallDetailRoute ? (
+					<CallDetail />
+				) : isInsightsRoute ? (
+					<Insights />
+				) : isTopDealsRoute ? (
+					<TopDeals />
+				) : isHighRiskRoute ? (
+					<HighRisk />
 				) : (
 					<>
 				<div className="mb-8 flex flex-wrap items-start justify-between gap-4">

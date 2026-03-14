@@ -19,7 +19,7 @@ const Signup = ({ onSignup, isAuthenticated }) => {
 
   useEffect(() => {
     if (isAuthenticated) {
-      navigate("/app", { replace: true });
+      navigate("/dashboard", { replace: true });
     }
   }, [isAuthenticated, navigate]);
 
@@ -54,7 +54,7 @@ const Signup = ({ onSignup, isAuthenticated }) => {
         });
       }
 
-      navigate("/app", { replace: true });
+      navigate("/dashboard", { replace: true });
     } catch (submitError) {
       setError(submitError.message || "Unable to create account right now.");
     } finally {

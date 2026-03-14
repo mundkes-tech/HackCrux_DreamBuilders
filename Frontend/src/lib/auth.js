@@ -63,7 +63,7 @@ export const getStoredAuth = () => {
 
   try {
     return JSON.parse(raw);
-  } catch (_error) {
+  } catch {
     clearStoredAuth();
     return null;
   }
