@@ -14,12 +14,12 @@ import {
 } from "lucide-react";
 
 const navItems = [
-	{ icon: LayoutDashboard, label: "Dashboard", path: "/app" },
-	{ icon: Upload, label: "Analyze Call", path: "/app/analyze" },
-	{ icon: Phone, label: "All Calls", path: "/app/calls" },
-	{ icon: BarChart3, label: "Insights", path: "/app/insights" },
-	{ icon: TrendingUp, label: "Top Deals", path: "/app/top-deals" },
-	{ icon: AlertTriangle, label: "High Risk", path: "/app/high-risk" },
+	{ icon: LayoutDashboard, label: "Dashboard", path: "/dashboard" },
+	{ icon: Upload, label: "Analyze Call", path: "/dashboard/analyze" },
+	{ icon: Phone, label: "All Calls", path: "/dashboard/calls" },
+	{ icon: BarChart3, label: "Insights", path: "/dashboard/insights" },
+	{ icon: TrendingUp, label: "Top Deals", path: "/dashboard/top-deals" },
+	{ icon: AlertTriangle, label: "High Risk", path: "/dashboard/high-risk" },
 ];
 
 const Sidebar = ({ collapsed, onToggle, mobileOpen, onMobileClose }) => {
@@ -65,7 +65,7 @@ const Sidebar = ({ collapsed, onToggle, mobileOpen, onMobileClose }) => {
 					<NavLink
 						key={path}
 						to={path}
-						end={path === "/app"}
+						end={path === "/dashboard"}
 						onClick={onMobileClose}
 						className={({ isActive }) =>
 							`group relative flex items-center gap-3 rounded-xl px-3 py-[0.7rem] text-[0.875rem] font-medium transition ${
@@ -81,7 +81,7 @@ const Sidebar = ({ collapsed, onToggle, mobileOpen, onMobileClose }) => {
 									<span className="absolute left-0 top-1/2 h-[70%] w-[3px] -translate-y-1/2 rounded-r bg-indigo-400" />
 								) : null}
 
-								<Icon size={20} className="shrink-0" />
+								{React.createElement(Icon, { size: 20, className: "shrink-0" })}
 
 								{!collapsed && <span className="truncate">{label}</span>}
 

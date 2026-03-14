@@ -180,7 +180,7 @@ const LandingPage = () => {
             {features.map(({ icon: Icon, title, desc }) => (
               <article key={title} className="rounded-xl border border-gray-800 bg-[#161829]/40 p-6 transition-colors hover:border-gray-700">
                 <div className="mb-3 flex h-[34px] w-[34px] items-center justify-center rounded-[10px] bg-gradient-to-br from-indigo-500 to-purple-600 text-white shadow-lg">
-                  <Icon size={18} />
+                  {React.createElement(Icon, { size: 18 })}
                 </div>
                 <h3 className="mb-2 text-[1.1rem] font-bold text-white">{title}</h3>
                 <p className="text-[0.95rem] leading-relaxed text-gray-400">{desc}</p>

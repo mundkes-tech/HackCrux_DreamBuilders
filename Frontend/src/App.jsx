@@ -24,7 +24,7 @@ const ProtectedRoute = ({ isAuthenticated, children }) => {
 
 const PublicRoute = ({ isAuthenticated, children }) => {
   if (isAuthenticated) {
-    return <Navigate to="/app" replace />;
+    return <Navigate to="/dashboard" replace />;
   }
 
   return children;
@@ -60,7 +60,7 @@ function App() {
         };
         persistAuth(nextAuth, storedAuth.remember);
         setAuth(nextAuth);
-      } catch (_error) {
+      } catch {
         clearStoredAuth();
         setAuth(null);
       } finally {
@@ -117,7 +117,7 @@ function App() {
           )}
         />
         <Route
-          path='/app/*'
+          path='/dashboard/*'
           element={(
             <ProtectedRoute isAuthenticated={Boolean(auth?.token)}>
               <Dashboard user={auth?.user} onLogout={handleLogout} />

@@ -10,7 +10,7 @@ const Login = ({ onLogin, isAuthenticated }) => {
 
   useEffect(() => {
     if (isAuthenticated) {
-      navigate("/app", { replace: true });
+      navigate("/dashboard", { replace: true });
     }
   }, [isAuthenticated, navigate]);
 
@@ -33,7 +33,7 @@ const Login = ({ onLogin, isAuthenticated }) => {
         });
       }
 
-      navigate("/app", { replace: true });
+      navigate("/dashboard", { replace: true });
     } catch (submitError) {
       setError(submitError.message || "Unable to login right now.");
     } finally {
