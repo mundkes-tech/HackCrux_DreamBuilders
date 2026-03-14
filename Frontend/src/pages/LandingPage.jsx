@@ -4,6 +4,7 @@ import {
   ArrowRight,
   AudioLines,
   ChartSpline,
+  Mail,
   ShieldCheck,
   Sparkles,
 } from "lucide-react";
@@ -23,6 +24,11 @@ const features = [
     icon: ChartSpline,
     title: "Team Performance Dashboard",
     desc: "Track sentiment, conversion probability, and coaching opportunities in one view.",
+  },
+  {
+    icon: Mail,
+    title: "Auto Follow-Up Email Drafts",
+    desc: "Generate personalized follow-up emails from the conversation context in seconds.",
   },
 ];
 
@@ -55,6 +61,9 @@ const LandingPage = () => {
           </div>
 
           <nav className="hidden items-center gap-6 md:flex">
+            <a href="#about" className="text-[0.9rem] font-medium text-gray-400 transition-colors hover:text-white">
+              About
+            </a>
             <a href="#features" className="text-[0.9rem] font-medium text-gray-400 transition-colors hover:text-white">
               Features
             </a>
@@ -125,9 +134,34 @@ const LandingPage = () => {
               <li className="rounded-lg border border-white/10 bg-white/5 px-4 py-3">
                 Team dashboard visibility to improve call quality over time.
               </li>
+              <li className="rounded-lg border border-white/10 bg-white/5 px-4 py-3">
+                Auto-generated follow-up email drafts based on discussion context and next steps.
+              </li>
             </ul>
             <div className="mt-5 rounded-xl border border-emerald-500/20 bg-emerald-500/10 p-4 text-sm text-emerald-300">
               No vanity numbers on landing. Real metrics are shown inside the product dashboard.
+            </div>
+          </div>
+        </section>
+
+        <section id="about" className="pt-20">
+          <div className="rounded-2xl border border-gray-800 bg-[#121526]/80 p-6 backdrop-blur-md md:p-8">
+            <h2 className="mb-6 text-2xl font-bold text-white md:text-3xl">The Problem We Solve</h2>
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+              <article className="rounded-xl border border-white/10 bg-white/5 p-5">
+                <p className="mb-2 text-[0.78rem] font-semibold uppercase tracking-[0.14em] text-cyan-300">Problem Statement</p>
+                <p className="text-[0.95rem] leading-relaxed text-gray-300">
+                  Sales teams spend too much time replaying calls, still miss critical objections, and often lose momentum before follow-up happens.
+                </p>
+              </article>
+              <article className="rounded-xl border border-white/10 bg-white/5 p-5">
+                <p className="mb-2 text-[0.78rem] font-semibold uppercase tracking-[0.14em] text-emerald-300">What SalesIQ Solves</p>
+                <ul className="space-y-2 text-[0.95rem] text-gray-300">
+                  <li>Converts raw call recordings into clear insights and next actions.</li>
+                  <li>Highlights objections, sentiment shifts, and buying intent for faster decision-making.</li>
+                  <li>Creates an auto follow-up email draft from the conversation so reps can respond immediately.</li>
+                </ul>
+              </article>
             </div>
           </div>
         </section>
