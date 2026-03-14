@@ -176,7 +176,7 @@ const ProgressRow = ({ label, count, maxCount, gradient }) => (
 	</div>
 );
 
-const Dashboard = ({ user, onLogout }) => {
+const Dashboard = ({ user, token, onLogout }) => {
 	const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 	const [mobileOpen, setMobileOpen] = useState(false);
 	const [analytics, setAnalytics] = useState(defaultAnalytics);
@@ -288,7 +288,7 @@ const Dashboard = ({ user, onLogout }) => {
 			<div className={`relative z-10 pt-16 transition-[margin] duration-300 ${mainOffsetClass}`}>
 				<div className="mx-auto max-w-7xl px-6 py-10 lg:px-12">
 				{isAnalyzeRoute ? (
-					<AnalyzeCall />
+					<AnalyzeCall token={token} />
 				) : isCallsRoute ? (
 					<CallList />
 				) : isCallDetailRoute ? (

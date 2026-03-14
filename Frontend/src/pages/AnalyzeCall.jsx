@@ -83,7 +83,7 @@ const isAcceptedFile = (file) => {
 	return ACCEPTED_EXTENSIONS.some((extension) => fileName.endsWith(extension));
 };
 
-function AnalyzeCall() {
+function AnalyzeCall({ token }) {
 	const fileInputRef = useRef(null);
 	const [inputType, setInputType] = useState('audio');
 	const [audioFile, setAudioFile] = useState(null);
@@ -96,6 +96,10 @@ function AnalyzeCall() {
 	const [uploadProgress, setUploadProgress] = useState(0);
 	const [isDragActive, setIsDragActive] = useState(false);
 	const [feedback, setFeedback] = useState(null);
+	const [callId, setCallId] = useState(null);
+	const [aiInsights, setAiInsights] = useState(null);
+
+	const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api';
 
 	const setSelectedFile = useCallback((file) => {
 		if (!file) {
@@ -123,6 +127,8 @@ function AnalyzeCall() {
 		setStep(null);
 		setCompletedSteps([]);
 		setUploadProgress(0);
+		setCallId(null);
+		setAiInsights(null);
 	}, []);
 
 	const handleFileInputChange = useCallback((event) => {
@@ -136,6 +142,76 @@ function AnalyzeCall() {
 		const [file] = Array.from(event.dataTransfer.files || []);
 		setSelectedFile(file);
 	}, [setSelectedFile]);
+
+	// Step 1: Upload Audio
+	const uploadAudio = async () => {
+		const formData = new FormData();
+		formData.append('audio', audioFile);
+		formData.append('customer_name', customerName || 'Unknown');
+		formData.append('customer_email', customerEmail);
+		formData.append('customer_phone', customerPhone || '');
+
+		const response = await fetch(`${API_BASE_URL}/audio/upload`, {
+			method: 'POST',
+			headers: { 'Authorization': `Bearer ${token}` },
+			body: formData
+		});
+
+		const data = await response.json();
+		if (!response.ok) throw new Error(data.message || 'Upload failed');
+		return data.callId;
+	};
+
+	// Step 2: Transcribe
+	const transcribeAudio = async (cId) => {
+		const response = await fetch(`${API_BASE_URL}/transcription/transcribe/${cId}`, {
+			method: 'POST',
+			headers: {
+				'Authorization': `Bearer ${token}`,
+				'Content-Type': 'application/json'
+			}
+		});
+
+		const data = await response.json();
+		if (!response.ok) throw new Error(data.message || 'Transcription failed');
+		return data.transcript;
+	};
+
+	// Step 3: Analyze
+	const analyzeCall = async (cId) => {
+		const response = await fetch(`${API_BASE_URL}/ai/analyze/${cId}`, {
+			method: 'POST',
+			headers: {
+				'Authorization': `Bearer ${token}`,
+				'Content-Type': 'application/json'
+			}
+		});
+
+		const data = await response.json();
+		if (!response.ok) throw new Error(data.message || 'Analysis failed');
+		return data.insights;
+	};
+
+	// Upload text
+	const uploadText = async () => {
+		const response = await fetch(`${API_BASE_URL}/audio/upload-text`, {
+			method: 'POST',
+			headers: {
+				'Authorization': `Bearer ${token}`,
+				'Content-Type': 'application/json'
+			},
+			body: JSON.stringify({
+				text: textContent,
+				customer_name: customerName || 'Unknown',
+				customer_email: customerEmail,
+				customer_phone: customerPhone || ''
+			})
+		});
+
+		const data = await response.json();
+		if (!response.ok) throw new Error(data.message || 'Upload failed');
+		return data.callId;
+	};
 
 	const handleSubmit = async (event) => {
 		event.preventDefault();
@@ -151,12 +227,42 @@ function AnalyzeCall() {
 			return;
 		}
 
+		if (!customerEmail) {
+			setFeedback({ type: 'error', message: 'Please enter customer email.' });
+			return;
+		}
+
 		resetPipeline();
 		setStep('uploading');
-		setUploadProgress(inputType === 'text' ? 100 : 0);
 
 		try {
-			throw new Error(notConfiguredMessage);
+			// STEP 1: Upload
+			let cId;
+			if (inputType === 'audio') {
+				cId = await uploadAudio();
+			} else {
+				cId = await uploadText();
+			}
+			setCallId(cId);
+			setCompletedSteps(['uploading']);
+
+			// Only transcribe if not text input
+			if (inputType === 'audio') {
+				setStep('transcribing');
+				await transcribeAudio(cId);
+				setCompletedSteps(['uploading', 'transcribing']);
+			}
+
+			// STEP 3: Analyze
+			setStep('analyzing');
+			const insights = await analyzeCall(cId);
+			setAiInsights(insights);
+			setCompletedSteps(['uploading', 'transcribing', 'analyzing', 'done']);
+			setStep('done');
+
+			// Show complete view
+			setTimeout(() => setStep('complete'), 1000);
+
 		} catch (error) {
 			resetPipeline();
 			setFeedback({ type: 'error', message: error.message });
