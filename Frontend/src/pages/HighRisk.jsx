@@ -14,12 +14,12 @@ const sentimentClass = (sentiment) => {
   return "border-amber-400/35 bg-amber-400/12 text-amber-300";
 };
 
-const HighRisk = () => {
+const HighRisk = ({ token }) => {
   const [calls, setCalls] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    dashboardApi.getCalls()
+    dashboardApi.getCalls(token)
       .then((r) => {
         // Calls with dealProbability < 40 or negative sentiment
         const risky = (r.calls || []).filter((c) => {
@@ -31,7 +31,7 @@ const HighRisk = () => {
       })
       .catch(() => {})
       .finally(() => setLoading(false));
-  }, []);
+  }, [token]);
 
   return (
     <div className="py-8 text-slate-200">

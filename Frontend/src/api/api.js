@@ -75,4 +75,22 @@ export const dashboardApi = {
       return { analytics: null };
     }
   },
+  downloadCallReport: async (callId, token = null) => {
+    const headers = {};
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+
+    const response = await fetch(`${API_BASE_URL}/dashboard/report/${callId}`, { headers });
+    if (!response.ok) {
+      throw new Error('Failed to download report');
+    }
+
+    const contentDisposition = response.headers.get('content-disposition') || '';
+    const fileNameMatch = contentDisposition.match(/filename\*?=(?:UTF-8''|\")?([^\";]+)/i);
+    const fileName = fileNameMatch ? decodeURIComponent(fileNameMatch[1].replace(/\"/g, '').trim()) : `call-report-${callId}.pdf`;
+    const blob = await response.blob();
+
+    return { blob, fileName };
+  },
 };
