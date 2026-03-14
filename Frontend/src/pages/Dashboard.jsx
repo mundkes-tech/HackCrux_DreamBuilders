@@ -233,9 +233,9 @@ const Dashboard = ({ user, token, onLogout }) => {
 				) : isInsightsRoute ? (
 					<Insights token={token} />
 				) : isTopDealsRoute ? (
-					<TopDeals />
+					<TopDeals token={token} />
 				) : isHighRiskRoute ? (
-					<HighRisk />
+					<HighRisk token={token} />
 				) : (
 					<>
 				{dashboardLoading ? (

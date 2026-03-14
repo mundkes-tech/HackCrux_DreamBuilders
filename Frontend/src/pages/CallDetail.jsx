@@ -264,10 +264,25 @@ function CallDetail({ token }) {
 
   const downloadReport = async () => {
     setDownloading(true);
-    setTimeout(() => {
+    setFeedback(null);
+
+    try {
+      const { blob, fileName } = await dashboardApi.downloadCallReport(callId, token);
+      const objectUrl = URL.createObjectURL(blob);
+      const anchor = document.createElement('a');
+      anchor.href = objectUrl;
+      anchor.download = fileName;
+      document.body.appendChild(anchor);
+      anchor.click();
+      anchor.remove();
+      URL.revokeObjectURL(objectUrl);
+
+      setFeedback({ type: 'success', message: 'Report downloaded successfully.' });
+    } catch (error) {
+      setFeedback({ type: 'error', message: 'Failed to download report. Please try again.' });
+    } finally {
       setDownloading(false);
-      setFeedback({ type: 'error', message: 'Report download is not wired to the backend in this workspace yet.' });
-    }, 400);
+    }
   };
 
   const saveMetadata = async () => {
