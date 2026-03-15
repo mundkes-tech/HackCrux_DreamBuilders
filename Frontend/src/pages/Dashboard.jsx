@@ -1,4 +1,4 @@
-import { createElement, useEffect, useState } from "react";
+import { createElement, useEffect, useRef, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
 	Activity,
@@ -23,6 +23,7 @@ import Insights from "./Insights";
 import TopDeals from "./TopDeals";
 import HighRisk from "./HighRisk";
 import Profile from "./Profile";
+import CopilotFloatingPanel from "../components/CopilotFloatingPanel";
 import { dashboardApi } from "../api/api";
 
 const defaultAnalytics = {
@@ -123,6 +124,7 @@ const Dashboard = ({ user: initialUser, token, onLogout, onUserUpdate }) => {
 	const [competitors, setCompetitors] = useState(defaultCompetitors);
 	const [dashboardLoading, setDashboardLoading] = useState(true);
 	const [dashboardError, setDashboardError] = useState("");
+	const copilotPanelRef = useRef(null);
 	const navigate = useNavigate();
 	const location = useLocation();
 
@@ -205,6 +207,10 @@ const Dashboard = ({ user: initialUser, token, onLogout, onUserUpdate }) => {
 		onUserUpdate?.(updatedUser);
 	};
 
+	const handleStartCopilot = () => {
+		copilotPanelRef.current?.openAndStart?.();
+	};
+
 	return (
 		<div
 			className="relative min-h-screen overflow-x-hidden bg-[linear-gradient(180deg,#090b13_0%,#0f1222_48%,#0a0b14_100%)] text-slate-200"
@@ -214,6 +220,7 @@ const Dashboard = ({ user: initialUser, token, onLogout, onUserUpdate }) => {
 				onToggle={() => setSidebarCollapsed((prev) => !prev)}
 				mobileOpen={mobileOpen}
 				onMobileClose={() => setMobileOpen(false)}
+				onStartCopilot={handleStartCopilot}
 			/>
 			<Topbar
 				sidebarCollapsed={sidebarCollapsed}
@@ -260,6 +267,8 @@ const Dashboard = ({ user: initialUser, token, onLogout, onUserUpdate }) => {
 							</div>
 						</div>
 
+			<CopilotFloatingPanel token={token} />
+
 						<div className="mb-8 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
 							{[...Array(6)].map((_, i) => (
 								<div
@@ -298,6 +307,13 @@ const Dashboard = ({ user: initialUser, token, onLogout, onUserUpdate }) => {
 					</div>
 
 					<div className="flex items-center gap-3">
+						<button
+							type="button"
+							onClick={handleStartCopilot}
+							className="rounded-lg border border-cyan-500/30 bg-cyan-500/12 px-4 py-2 text-sm font-medium text-cyan-200 transition hover:bg-cyan-500/18"
+						>
+							Start Live Copilot
+						</button>
 						<button
 							type="button"
 							onClick={handleLogout}
@@ -513,6 +529,8 @@ const Dashboard = ({ user: initialUser, token, onLogout, onUserUpdate }) => {
 				)}
 				</div>
 			</div>
+
+			<CopilotFloatingPanel ref={copilotPanelRef} token={token} />
 		</div>
 	);
 };

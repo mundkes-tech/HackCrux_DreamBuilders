@@ -24,7 +24,7 @@ const navItems = [
 	{ icon: User, label: "Profile", path: "/dashboard/profile" },
 ];
 
-const Sidebar = ({ collapsed, onToggle, mobileOpen, onMobileClose }) => {
+const Sidebar = ({ collapsed, onToggle, mobileOpen, onMobileClose, onStartCopilot }) => {
 	const sidebarWidthClass = collapsed ? "md:w-[68px]" : "md:w-[240px]";
 	const mobileStateClass = mobileOpen ? "translate-x-0" : "-translate-x-full";
 
@@ -96,6 +96,25 @@ const Sidebar = ({ collapsed, onToggle, mobileOpen, onMobileClose }) => {
 						)}
 					</NavLink>
 				))}
+
+				<button
+					type="button"
+					onClick={() => {
+						onStartCopilot?.();
+						onMobileClose?.();
+					}}
+					className="group relative flex w-full items-center gap-3 rounded-xl border border-cyan-500/20 bg-cyan-500/10 px-3 py-[0.7rem] text-[0.875rem] font-medium text-cyan-300 transition hover:bg-cyan-500/15 hover:text-cyan-200"
+				>
+					{React.createElement(Zap, { size: 20, className: "shrink-0" })}
+
+					{!collapsed && <span className="truncate">Start Copilot</span>}
+
+					{collapsed ? (
+						<span className="pointer-events-none absolute left-[calc(100%+12px)] top-1/2 z-[200] -translate-y-1/2 whitespace-nowrap rounded-md border border-white/10 bg-[#1b1d2c] px-3 py-1.5 text-[0.8rem] text-slate-100 opacity-0 shadow-[0_10px_30px_rgba(0,0,0,0.35)] transition group-hover:opacity-100 md:block">
+							Start Copilot
+						</span>
+					) : null}
+				</button>
 			</nav>
 
 			{!collapsed && (
